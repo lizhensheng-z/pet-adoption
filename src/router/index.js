@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import userRoutes from './user.js'
 import orgRoutes from './org.js'
 import adminRoutes from './admin.js'
+import { getToken } from '@/utils/auth.js'
 
 const routes = [
   {
@@ -25,7 +26,7 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
+  const token = getToken()
   
   // 需要认证的页面
   if (to.meta.requiresAuth && !token) {
