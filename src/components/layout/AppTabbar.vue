@@ -1,0 +1,92 @@
+<template>
+  <nav class="app-tabbar">
+    <router-link
+      v-for="item in tabItems"
+      :key="item.path"
+      :to="item.path"
+      class="tab-item"
+      :class="{ active: $route.path === item.path }"
+    >
+      <el-icon :size="20">
+        <component :is="item.icon" />
+      </el-icon>
+      <span class="tab-text">{{ item.name }}</span>
+    </router-link>
+  </nav>
+</template>
+
+<script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/auth.js'
+import { 
+  House, List, Star, DocumentCopy, User 
+} from '@element-plus/icons-vue'
+
+const route = useRoute()
+const authStore = useAuthStore()
+
+// 根据用户类型和登录状态显示不同的导航项
+const tabItems = computed(() => {
+  const baseItems = [
+    { path: '/home', name: '首页', icon: House },
+    { path: '/pets', name: '宠物', icon: List },
+  ]
+
+  const userItems = [
+    { path: '/favorites', name: '收藏', icon: Star },
+    { path: '/applications', name: '申请', icon: DocumentCopy },
+    { path: '/profile', name: '我的', icon: User }
+  ]
+
+  if (authStore.isLoggedIn) {
+    return [...baseItems, ...userItems]
+  } else {
+    return [
+      ...baseItems,
+      { path: '/login', name: '登录', icon: User }
+    ]
+  }
+})
+</script>
+
+<style scoped>
+.app-tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: white;
+  border-top: 1px solid #eee;
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 6px;
+  text-decoration: none;
+  color: #666;
+  transition: color 0.3s;
+  min-height: 50px;
+  justify-content: center;
+}
+
+.tab-item.active {
+  color: #FF8C42;
+}
+
+.tab-text {
+  font-size: 12px;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+.tab-item:hover {
+  color: #FF8C42;
+}
+</style>
