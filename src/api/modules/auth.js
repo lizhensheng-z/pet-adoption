@@ -4,27 +4,32 @@ import http from '../request.js'
 export const authAPI = {
   // 登录
   login(data) {
-    return http.post('/auth/login', data)
+    return http.post('/auth/login', data, { showLoading: true })
   },
 
   // 注册
   register(data) {
-    return http.post('/auth/register', data)
+    return http.post('/auth/register', data, { showLoading: true })
   },
 
   // 退出登录
   logout() {
-    return http.post('/auth/logout')
+    return http.post('/auth/logout', {}, { showLoading: false })
   },
 
   // 刷新token
-  refreshToken() {
-    return http.post('/auth/refresh')
+  refreshToken(refreshToken) {
+    return http.post('/auth/refresh-token', { refreshToken }, { showLoading: false })
   },
 
-  // 获取用户信息
-  getUserInfo() {
-    return http.get('/auth/user')
+  // 获取当前用户信息
+  getCurrentUser() {
+    return http.get('/auth/me')
+  },
+
+  // 更新个人资料
+  updateProfile(data) {
+    return http.put('/auth/profile', data)
   }
 }
 

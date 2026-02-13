@@ -60,7 +60,16 @@ const handleLogin = async () => {
     loading.value = true
     await authStore.login(form.value)
     ElMessage.success('登录成功')
-    router.push('/home')
+    
+    // 根据用户角色跳转到不同页面
+    const role = authStore.userRole
+    if (role === 'ADMIN') {
+      router.push('/admin')
+    } else if (role === 'ORG') {
+      router.push('/org')
+    } else {
+      router.push('/home')
+    }
   } catch (error) {
     console.error('登录失败:', error)
   } finally {
@@ -76,12 +85,21 @@ const handleLogin = async () => {
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #FF8C42 0%, #FF6B6B 100%);
+  position: relative;
+  z-index: 1;
 }
 
 .auth-container {
   width: 100%;
   max-width: 400px;
   padding: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.auth-card {
+  position: relative;
+  z-index: 2;
 }
 
 .auth-card h2 {

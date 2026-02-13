@@ -1,10 +1,23 @@
 import axios from 'axios'
 import { ElMessage, ElLoading } from 'element-plus'
 import { RESPONSE_CODES, ERROR_MESSAGES } from './types.js'
-import { getToken, removeToken } from '@/utils/auth.js'
+import { getAccessToken, removeToken, getRefreshToken, setAccessToken, setRefreshToken } from '@/utils/auth.js'
 
 let loadingInstance = null
 let pendingRequests = new Map()
+let isRefreshing = false
+let subscribers = []
+
+// 订阅token刷新
+const subscribeTokenRefresh = (cb) => {
+  subscribers.push(cb)
+}
+
+// 通知所有订阅者token已刷新
+const notifySubscribers = (newToken) => {
+  subscribers.forEach(cb => cb(newToken))
+  subscribers = []
+}
 
 // 创建axios实例
 const request = axios.create({
@@ -25,7 +38,7 @@ const generateRequestKey = (config) => {
 request.interceptors.request.use(
   (config) => {
     // 添加token
-    const token = getToken()
+    const token = getAccessToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -86,7 +99,7 @@ request.interceptors.response.use(
       return Promise.reject(new Error(errorMessage))
     }
   },
-  (error) => {
+  async (error) => {
     // 清除请求记录
     if (error.config) {
       const requestKey = generateRequestKey(error.config)
@@ -106,9 +119,38 @@ request.interceptors.response.use(
       
       switch (status) {
         case 401:
-          errorMessage = '认证失败，请重新登录'
-          removeToken()
-          window.location.href = '/login'
+          // 尝试刷新token
+          if (!isRefreshing && getRefreshToken()) {
+            isRefreshing = true
+            
+            try {
+              const response = await axios.post('/api/auth/refresh-token', {
+                refreshToken: getRefreshToken()
+              })
+              
+              const { accessToken, refreshToken } = response.data.data
+              setAccessToken(accessToken)
+              setRefreshToken(refreshToken)
+              
+              // 通知所有订阅者
+              notifySubscribers(accessToken)
+              
+              // 重试当前请求
+              error.config.headers.Authorization = `Bearer ${accessToken}`
+              return request(error.config)
+            } catch (refreshError) {
+              // 刷新失败，清除token并跳转登录
+              removeToken()
+              window.location.href = '/login'
+              errorMessage = '登录已过期，请重新登录'
+            } finally {
+              isRefreshing = false
+            }
+          } else {
+            errorMessage = '认证失败，请重新登录'
+            removeToken()
+            window.location.href = '/login'
+          }
           break
         case 403:
           errorMessage = '权限不足'

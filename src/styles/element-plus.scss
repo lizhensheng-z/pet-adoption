@@ -97,23 +97,32 @@
 .el-message {
   border-radius: var(--border-radius-base);
   box-shadow: var(--shadow-dark);
+  z-index: 10000 !important;
+  
+  .el-message__content {
+    color: #fff !important;
+  }
   
   &.el-message--success {
     background: var(--success-color);
+    border-color: var(--success-color);
   }
   
   &.el-message--warning {
     background: var(--warning-color);
+    border-color: var(--warning-color);
   }
   
   &.el-message--error {
     background: var(--danger-color);
+    border-color: var(--danger-color);
   }
 }
 
 .el-notification {
   border-radius: var(--border-radius-large);
   box-shadow: var(--shadow-dark);
+  z-index: 10000 !important;
 }
 
 .el-tag {
