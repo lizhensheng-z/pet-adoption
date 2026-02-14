@@ -1,6 +1,6 @@
 <template>
-  <AppLayout>
-    <div class="profile-page">
+  
+    <div class="profile-page" v-if="!loading">
       <!-- 顶部用户信息区域 -->
       <div class="profile-header">
         <div class="header-content">
@@ -92,7 +92,7 @@
           <span class="menu-text">打卡回访记录</span>
           <el-icon class="arrow-icon"><ArrowRight /></el-icon>
         </div>
-        <div class="menu-item" @click="goToHelp">
+<div class="menu-item" @click="goToHelp">
           <div class="menu-icon orange">
             <el-icon><QuestionFilled /></el-icon>
           </div>
@@ -101,7 +101,13 @@
         </div>
       </div>
     </div>
-  </AppLayout>
+
+    <!-- 加载状态 -->
+    <div v-else class="loading-container">
+      <el-icon class="is-loading" :size="40"><Loading /></el-icon>
+      <p>加载中...</p>
+    </div>
+  
 </template>
 
 <script setup>
@@ -114,7 +120,7 @@ import { creditAPI } from '@/api/modules/credit.js'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import {
   User, Setting, Top, Star, Medal, CircleCheck,
-  StarFilled, Camera, QuestionFilled, ArrowRight
+  StarFilled, Camera, QuestionFilled, ArrowRight, Loading
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -122,7 +128,7 @@ const authStore = useAuthStore()
 const userStore = useUserStore()
 const appStore = useAppStore()
 
-const loading = ref(false)
+const loading = ref(true)  // 初始状态为 true，确保显示加载动画
 const creditDetail = ref(null)
 
 // 给 stats 设置默认值，防止页面闪烁
@@ -167,28 +173,33 @@ const medals = computed(() => {
 
 const loadUserProfile = async () => {
   try {
+    console.log('开始加载用户信息，loading:', loading.value)
     loading.value = true
-    const res = await userStore.getUserProfile()
-    
-    // 【修复点】：打印日志方便调试
-    console.log('UserProfile Raw:', res)
+    const userData = await userStore.getUserProfile()
 
-    // 【修复点】：优先读取 store 中的状态，因为 action 可能没有返回处理后的数据
-    // 假设 userStore.getUserProfile() 会更新 userStore.userInfo
-    const userData = userStore.userInfo || res?.data || res || {}
+    // 打印日志方便调试
+    console.log('UserProfile Data:', userData)
+    console.log('Store userInfo:', userStore.userInfo)
 
-    if (userData && userData.stats) {
+    // 直接使用返回的 userData 或 store 中的 userInfo
+    const profileData = userData || userStore.userInfo
+
+    if (profileData && profileData.stats) {
       stats.value = {
-        applications: userData.stats.applications || 0,
-        favorites: userData.stats.favorites || 0,
-        checkins: userData.stats.checkins || 0,
-        adoptions: userData.stats.adoptions || 0
+        applications: profileData.stats.applications || 0,
+        favorites: profileData.stats.favorites || 0,
+        checkins: profileData.stats.checkins || 0,
+        adoptions: profileData.stats.adoptions || 0
       }
+      console.log('Stats 设置完成:', stats.value)
+    } else {
+      console.log('profileData 或 profileData.stats 不存在:', profileData)
     }
   } catch (error) {
     console.error('获取用户信息失败:', error)
   } finally {
     loading.value = false
+    console.log('加载完成，loading:', loading.value)
   }
 }
 
@@ -203,10 +214,19 @@ const loadCreditDetail = async () => {
 }
 
 onMounted(async () => {
+  console.log('Profile onMounted 开始')
+  console.log('初始 loading 状态:', loading.value)
+  console.log('authStore.user:', authStore.user)
+
   if (!authStore.user) {
+    console.log('开始获取当前用户信息...')
     await authStore.getCurrentUser()
+    console.log('当前用户信息获取完成:', authStore.user)
   }
+
+  console.log('开始并行加载用户档案和信用详情...')
   await Promise.all([loadUserProfile(), loadCreditDetail()])
+  console.log('Profile onMounted 完成，最终 loading:', loading.value)
 })
 
 // ... (其他路由跳转函数保持不变) ...
@@ -225,13 +245,16 @@ const goToHelp = () => router.push('/help')
 .profile-page {
   min-height: 100vh;
   background: #f5f7fa;
+  padding-bottom: 80px;
 }
 
 .profile-header {
   background: linear-gradient(135deg, #FF8C42 0%, #FFB380 100%);
   padding: 32px 20px 60px;
   position: relative;
-  z-index: 1; /* 【重要】创建层叠上下文 */
+  z-index: 1;
+  margin-top: -20px; /* 抵消 AppLayout 的内边距 */
+  padding-top: 52px; /* 补偿负 margin，确保头部可见 */
 }
 
 .header-content {
@@ -473,7 +496,7 @@ const goToHelp = () => router.push('/help')
     font-size: 24px;
   }
 
-  .stats-grid {
+.stats-grid {
     margin: 60px 12px 12px;
     gap: 0;
   }
@@ -485,5 +508,21 @@ const goToHelp = () => router.push('/help')
   .stat-value {
     font-size: 16px;
   }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: #999;
+  font-size: 16px;
+}
+
+.loading-container .el-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  color: #FF8C42;
 }
 </style>

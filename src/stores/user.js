@@ -34,10 +34,11 @@ export const useUserStore = defineStore('user', {
   },
 
   actions: {
-    // 获取用户详细信息（含信用分、统计数据、徽章等）
+// 获取用户详细信息（含信用分、统计数据、徽章等）
     async getUserProfile() {
       try {
         const response = await userAPI.getUserProfile()
+        // response 已经是拦截器处理后的 data 对象 {code, message, data}
         this.userInfo = response.data
         return response.data
       } catch (error) {
