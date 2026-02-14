@@ -16,7 +16,7 @@
                 </span>
               </h2>
               <p class="user-meta">
-                ID: {{ userInfo.id || '---' }} | 坐标：{{ currentCity }}
+                ID: {{ userInfo.userId || '---' }} | 坐标：{{ currentCity }}
               </p>
             </div>
             <el-icon class="settings-icon" @click="goToSettings"><Setting /></el-icon>
@@ -39,15 +39,17 @@
           <div class="medals">
             <p class="label">已获勋章</p>
             <div class="medal-icons">
-              <el-tooltip content="护星使者" placement="top">
-                <span class="medal-item"><el-icon><Star /></el-icon></span>
+              <el-tooltip 
+                v-for="(medal, index) in medals" 
+                :key="index"
+                :content="medal.name" 
+                placement="top"
+              >
+                <span class="medal-item">
+                  <el-icon><component :is="medal.icon" /></el-icon>
+                </span>
               </el-tooltip>
-              <el-tooltip content="领养达人" placement="top">
-                <span class="medal-item"><el-icon><Medal /></el-icon></span>
-              </el-tooltip>
-              <el-tooltip content="诚信认证" placement="top">
-                <span class="medal-item"><el-icon><CircleCheck /></el-icon></span>
-              </el-tooltip>
+              <span v-if="medals.length === 0" class="no-medal">暂无勋章</span>
             </div>
           </div>
           <el-button type="primary" link @click="showCreditDetail">详情</el-button>
@@ -106,7 +108,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
+import { useUserStore } from '@/stores/user.js'
 import { useAppStore } from '@/stores/app.js'
+import { creditAPI } from '@/api/modules/credit.js'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import {
   User, Setting, Top, Star, Medal, CircleCheck,
@@ -115,11 +119,13 @@ import {
 
 const router = useRouter()
 const authStore = useAuthStore()
+const userStore = useUserStore()
 const appStore = useAppStore()
 
 const loading = ref(false)
-const creditChange = ref(12)
+const creditDetail = ref(null)
 
+// 给 stats 设置默认值，防止页面闪烁
 const stats = ref({
   applications: 0,
   favorites: 0,
@@ -127,11 +133,18 @@ const stats = ref({
   adoptions: 0
 })
 
+// 增强 userInfo 计算属性的健壮性
 const userInfo = computed(() => {
-  return authStore.user || {}
+  return userStore.userInfo || authStore.user || {}
 })
 
-const currentCity = computed(() => appStore.currentCity || '未知')
+const currentCity = computed(() => {
+  return userInfo.value.city || appStore.currentCity || '未知'
+})
+
+const creditChange = computed(() => {
+  return userInfo.value.creditChange || 0
+})
 
 const roleLabel = computed(() => {
   const roleMap = {
@@ -142,54 +155,70 @@ const roleLabel = computed(() => {
   return roleMap[userInfo.value.role] || '用户'
 })
 
-onMounted(async () => {
-  loading.value = true
+const medals = computed(() => {
+  const medalList = userInfo.value.medals || []
+  const medalMap = {
+    'guardian': { icon: Star, name: '护星使者' },
+    'adopter': { icon: Medal, name: '领养达人' },
+    'verified': { icon: CircleCheck, name: '诚信认证' }
+  }
+  return medalList.map(key => medalMap[key]).filter(Boolean)
+})
+
+const loadUserProfile = async () => {
   try {
-    if (!authStore.user) {
-      await authStore.getCurrentUser()
+    loading.value = true
+    const res = await userStore.getUserProfile()
+    
+    // 【修复点】：打印日志方便调试
+    console.log('UserProfile Raw:', res)
+
+    // 【修复点】：优先读取 store 中的状态，因为 action 可能没有返回处理后的数据
+    // 假设 userStore.getUserProfile() 会更新 userStore.userInfo
+    const userData = userStore.userInfo || res?.data || res || {}
+
+    if (userData && userData.stats) {
+      stats.value = {
+        applications: userData.stats.applications || 0,
+        favorites: userData.stats.favorites || 0,
+        checkins: userData.stats.checkins || 0,
+        adoptions: userData.stats.adoptions || 0
+      }
     }
   } catch (error) {
     console.error('获取用户信息失败:', error)
   } finally {
     loading.value = false
   }
+}
+
+const loadCreditDetail = async () => {
+  try {
+    const response = await creditAPI.getCreditDetail()
+    // 兼容 response.data 或 直接 response
+    creditDetail.value = response.data || response
+  } catch (error) {
+    console.error('获取信用详情失败:', error)
+  }
+}
+
+onMounted(async () => {
+  if (!authStore.user) {
+    await authStore.getCurrentUser()
+  }
+  await Promise.all([loadUserProfile(), loadCreditDetail()])
 })
 
-const showCreditDetail = () => {
-  // TODO: 跳转到信用分详情页面
-}
-
-const goToSettings = () => {
-  router.push('/settings')
-}
-
-const goToApplications = () => {
-  router.push('/applications')
-}
-
-const goToFavorites = () => {
-  router.push('/favorites')
-}
-
-const goToCheckins = () => {
-  router.push('/checkins')
-}
-
-const goToAdoptions = () => {
-  router.push('/adoptions')
-}
-
-const goToPreference = () => {
-  router.push('/preference')
-}
-
-const goToCheckinRecords = () => {
-  router.push('/checkin-records')
-}
-
-const goToHelp = () => {
-  router.push('/help')
-}
+// ... (其他路由跳转函数保持不变) ...
+const showCreditDetail = () => router.push('/credit')
+const goToSettings = () => router.push('/settings')
+const goToApplications = () => router.push('/applications')
+const goToFavorites = () => router.push('/favorites')
+const goToCheckins = () => router.push('/checkins')
+const goToAdoptions = () => router.push('/adoptions')
+const goToPreference = () => router.push('/preference')
+const goToCheckinRecords = () => router.push('/checkins')
+const goToHelp = () => router.push('/help')
 </script>
 
 <style scoped>
@@ -202,6 +231,7 @@ const goToHelp = () => {
   background: linear-gradient(135deg, #FF8C42 0%, #FFB380 100%);
   padding: 32px 20px 60px;
   position: relative;
+  z-index: 1; /* 【重要】创建层叠上下文 */
 }
 
 .header-content {
@@ -251,6 +281,7 @@ const goToHelp = () => {
 
 .credit-card {
   position: absolute;
+  /* left/right/bottom/transform 保持不变 */
   left: 20px;
   right: 20px;
   bottom: -40px;
@@ -265,6 +296,7 @@ const goToHelp = () => {
   margin: 0 auto;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 10; /* 【重要】确保卡片悬浮在统计网格上方 */
 }
 
 .credit-score,
@@ -314,15 +346,23 @@ const goToHelp = () => {
   font-size: 16px;
 }
 
+.no-medal {
+  font-size: 12px;
+  color: #c0c4cc;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1px;
   background: white;
-  margin: 60px 16px 16px;
+  /* margin-top 60px 刚好避开卡片，但如果没有 z-index，背景可能会互相干扰 */
+  margin: 60px 16px 16px; 
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: relative; /* 建议添加 */
+  z-index: 0; /* 保持在卡片下方 */
 }
 
 .stat-item {
@@ -414,9 +454,12 @@ const goToHelp = () => {
 }
 
 @media (max-width: 480px) {
-  .profile-header {
-    padding: 24px 16px 60px;
-  }
+.profile-header {
+  background: linear-gradient(135deg, #FF8C42 0%, #FFB380 100%);
+  padding: 32px 20px 60px;
+  position: relative;
+  z-index: 10; /* 【新增】提高头部层级，确保内容覆盖在下方元素之上 */
+}
 
   .username {
     font-size: 18px;

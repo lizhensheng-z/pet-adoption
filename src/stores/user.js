@@ -34,6 +34,27 @@ export const useUserStore = defineStore('user', {
   },
 
   actions: {
+    // 获取用户详细信息（含信用分、统计数据、徽章等）
+    async getUserProfile() {
+      try {
+        const response = await userAPI.getUserProfile()
+        this.userInfo = response.data
+        return response.data
+      } catch (error) {
+        throw error
+      }
+    },
+
+    // 获取用户统计数据
+    async getUserStats() {
+      try {
+        const { data } = await userAPI.getUserStats()
+        return data
+      } catch (error) {
+        throw error
+      }
+    },
+
     // 获取用户偏好设置
     async getPreferences() {
       try {

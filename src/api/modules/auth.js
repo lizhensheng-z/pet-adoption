@@ -50,6 +50,16 @@ export const userAPI = {
     return http.put(`/users/${id}`, data)
   },
 
+  // 获取用户详细信息（含信用分、统计数据、徽章等）
+  getUserProfile() {
+    return http.get('/users/profile')
+  },
+
+  // 获取用户统计数据
+  getUserStats() {
+    return http.get('/users/stats')
+  },
+
   // 获取用户偏好设置
   getPreference() {
     return http.get('/users/preference')
