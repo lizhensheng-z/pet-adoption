@@ -318,22 +318,27 @@ const loadPetList = async () => {
 
     console.log('请求宠物列表参数:', params)
 
-    // 调用API获取宠物列表
+        // 调用API获取宠物列表
     const response = await petAPI.getPets(params)
 
     // 处理响应数据
+    // 注意：假设你的拦截器已经处理过一层，response.data 对应的是后端返回的 {list, total...}
     if (response && response.data) {
-      const { list, total, pageNo, pageSize } = response.data
+      // 1. 重命名解构出来的变量为 resList 和 resTotal
+      const { list: resList, total: resTotal } = response.data
 
-      // 转换数据格式以适配前端组件
-      petList.value = list.map(pet => ({
+      // 2. 转换数据格式
+      petList.value = Array.isArray(resList) ? resList.map(pet => ({
         id: pet.id,
         name: pet.name || '未命名',
         breed: pet.breed || '未知品种',
-        age: pet.age_month ? pet.age_month / 12 : 0, // 将月转为年
+        age: pet.ageMonth ? pet.ageMonth / 12 : 0,
         gender: pet.gender === 'MALE' ? 'male' : pet.gender === 'FEMALE' ? 'female' : 'unknown',
         status: pet.status === 'PUBLISHED' ? 'available' : 'unavailable',
-        images: pet.images || (pet.cover_url ? [pet.cover_url] : []),
+        // 优先使用 images 数组，如果没有则用 coverUrl 包装成数组
+        images: (Array.isArray(pet.images) && pet.images.length > 0) 
+                ? pet.images 
+                : (pet.coverUrl ? [pet.coverUrl] : []),
         tags: pet.tags || [],
         distance: pet.distance || 0,
         matchScore: pet.matchScore || 0,
@@ -341,10 +346,12 @@ const loadPetList = async () => {
         size: pet.size,
         sterilized: pet.sterilized,
         vaccinated: pet.vaccinated,
-        dewormed: pet.dewormed
-      }))
+        dewormed: pet.dewormed,
+        createdAt: pet.publishedTime
+      })) : []
 
-      total.value = total || 0
+      // 3. 正确为顶层的 total ref 赋值
+      total.value = resTotal || 0
 
       console.log(`成功加载 ${petList.value.length} 只宠物，共 ${total.value} 只`)
     } else {

@@ -95,17 +95,17 @@ export const petAPI = {
     return http.get('/pets/nearby', { lat, lng, radius, ...params })
   },
 
-  /**
+/**
    * 收藏/取消收藏宠物
-   * 接口：POST /api/pets/{petId}/favorite
-   * 权限：需认证 (favorite:manage)
-   * 说明：切换收藏状态
+   * 接口：POST /api/favorites/toggle
+   * 权限：需认证
+   * 说明：切换收藏状态，已收藏则取消，未收藏则添加
    *
    * @param {number} petId - 宠物ID
-   * @returns {Promise<{isFavorited: boolean}>}
+   * @returns {Promise<{favorited: boolean, favoriteId: number}>}
    */
   toggleFavorite(petId) {
-    return http.post(`/pets/${petId}/favorite`)
+    return http.post('/favorites/toggle', { petId })
   },
 
   /**
@@ -123,7 +123,7 @@ export const petAPI = {
     return http.get('/pets/favorites', params)
   },
 
-  /**
+/**
    * 获取搜索建议
    * 接口：GET /api/pets/suggest
    * 权限：无需认证
@@ -134,6 +134,51 @@ export const petAPI = {
    */
   getSearchSuggestions(keyword) {
     return http.get('/pets/suggest', { keyword })
+  },
+
+  /**
+   * 获取相似宠物
+   * 接口：GET /api/pets/{id}/similar
+   * 权限：无需认证
+   * 说明：基于物种、品种、年龄等维度推荐相似宠物
+   *
+   * @param {number} id - 宠物ID
+   * @param {Object} params - 可选参数
+   * @param {number} params.limit - 返回数量，默认6，最大12
+   * @param {number} params.lat - 用户纬度（用于距离过滤）
+   * @param {number} params.lng - 用户经度（用于距离过滤）
+   * @returns {Promise<{list: Pet[]}>}
+   */
+  getSimilarPets(id, params = {}) {
+    return http.get(`/pets/${id}/similar`, params)
+  },
+
+  /**
+   * 检查收藏状态
+   * 接口：GET /api/favorites/check
+   * 权限：需认证
+   * 说明：检查用户是否已收藏指定宠物
+   *
+   * @param {number} petId - 宠物ID
+   * @returns {Promise<{favorited: boolean, favoriteId: number}>}
+   */
+  checkFavorite(petId) {
+    return http.get('/favorites/check', { petId })
+  },
+
+  /**
+   * 记录浏览行为
+   * 接口：POST /api/behavior
+   * 权限：无需认证
+   * 说明：记录用户浏览行为，用于推荐算法
+   *
+   * @param {Object} data - 行为数据
+   * @param {number} data.petId - 宠物ID
+   * @param {string} data.behaviorType - 行为类型：VIEW/FAVORITE/APPLY/SHARE
+   * @returns {Promise}
+   */
+  recordBehavior(data) {
+    return http.post('/behavior', data)
   }
 }
 
