@@ -84,9 +84,9 @@
             </template>
           </el-dropdown>
           
-          <!-- 未登录状态 -->
+<!-- 未登录状态 -->
           <div class="auth-buttons" v-else>
-            <el-button @click="$router.push('/login')">登录</el-button>
+            <el-button @click="handleLoginClick">登录</el-button>
             <el-button type="primary" @click="$router.push('/register')">注册</el-button>
           </div>
         </div>
@@ -119,11 +119,12 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth.js'
 import { useAppStore } from '@/stores/app.js'
-import { 
-  Search, Location, ArrowDown, Bell, User, Star, 
-  Document, SwitchButton, Menu 
+import {
+  Search, Location, ArrowDown, Bell, User, Star,
+  Document, SwitchButton, Menu
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -189,6 +190,15 @@ const handleUserCommand = (command) => {
 
 const toggleMobileMenu = () => {
   showMobileSearch.value = !showMobileSearch.value
+}
+
+// 登录按钮点击处理
+const handleLoginClick = () => {
+  if (isLoggedIn.value) {
+    ElMessage.info('您已登录，无需重复登录')
+  } else {
+    router.push('/login')
+  }
 }
 </script>
 

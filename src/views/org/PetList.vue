@@ -1,12 +1,12 @@
 <template>
-  <AppLayout>
+
     <PageHeader title="宠物管理" />
     <div class="page-container">
       <div class="page-content">
         <el-empty description="宠物管理功能开发中..." />
       </div>
     </div>
-  </AppLayout>
+
 </template>
 
 <script setup>

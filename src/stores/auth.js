@@ -32,57 +32,77 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
-    // 登录
+// 登录
     async login(credentials) {
       try {
         this.isLoading = true
         const response = await authAPI.login(credentials)
-        
-        // response.data 是 API 返回的完整 JSON：{ code, message, data: {...} }
-        // response.data.data 才是具体的登录数据
+
+        console.log('登录接口完整响应:', response)
+
+        // 响应拦截器已经处理了，response 格式为 { code, message, data }
+        // response.data 才是真正的业务数据
         const loginData = response.data
-        
+
+        if (!loginData || !loginData.accessToken) {
+          throw new Error('登录返回数据异常')
+        }
+
+        console.log('登录数据:', loginData)
+
+        // 解构登录数据（注意：后端返回的是 userId）
         const { accessToken, refreshToken, permissions, userId, username, role, avatar } = loginData
-        
-        // 保存token
+
+        // 保存到 state
         this.token = accessToken
         this.refreshToken = refreshToken
+
+        // 保存到 localStorage
         setAccessToken(accessToken)
         setRefreshToken(refreshToken)
-        
-        // 设置用户信息
+
+        // 设置用户信息（使用 userId 字段）
         this.user = {
           id: userId,
           username: username,
           role: role,
-          avatar: avatar,
-          permissions: permissions || []
+          avatar: avatar
         }
         this.permissions = permissions || []
-        
+
+        console.log('登录成功，用户信息:', this.user)
+        console.log('当前角色:', role)
+
         return loginData
       } catch (error) {
+        console.error('登录失败:', error)
         throw error
       } finally {
         this.isLoading = false
       }
     },
 
-    // 注册
+// 注册
     async register(userData) {
       try {
         this.isLoading = true
         const response = await authAPI.register(userData)
-        
-        const userData_response = response.data
-        
+
+        console.log('注册响应:', response)
+
+        // 响应拦截器已经处理了，response 格式为 { code, message, data }
+        const registerData = response.data
+
+        console.log('注册数据:', registerData)
+
         // 注册成功返回用户信息，但没有token，需要提示用户登录
-        if (userData_response?.id) {
+        if (registerData?.userId) {
           ElMessage.success('注册成功，请登录')
         }
-        
-        return userData_response
+
+        return registerData
       } catch (error) {
+        console.error('注册失败:', error)
         throw error
       } finally {
         this.isLoading = false
@@ -107,14 +127,21 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // 获取当前用户信息
+// 获取当前用户信息
     async getCurrentUser() {
       try {
         const response = await authAPI.getCurrentUser()
+
+        console.log('获取用户信息响应:', response)
+
+        // 响应拦截器已经处理了，response 格式为 { code, message, data }
         const userData = response.data
-        
+
+        console.log('用户数据:', userData)
+
+        // 解构用户数据（注意：后端返回的是 userId）
         const { userId, username, role, avatar, phone, email, status, createTime, permissions } = userData
-        
+
         this.user = {
           id: userId,
           username: username,
@@ -123,14 +150,21 @@ export const useAuthStore = defineStore('auth', {
           phone: phone,
           email: email,
           status: status,
-          createTime: createTime,
-          permissions: permissions || []
+          createTime: createTime
         }
         this.permissions = permissions || []
-        
+
+        console.log('用户信息更新成功:', this.user)
+
         return userData
       } catch (error) {
-        this.logout()
+        // 【修复】不要自动登出，只在 token 真正过期时才登出
+        // 可能是网络问题或接口不存在，不应该清除已登录状态
+        console.error('获取当前用户信息失败:', error)
+        // 如果是认证错误（401），才调用 logout
+        if (error.response?.status === 401 || error.code === 1001) {
+          this.logout()
+        }
         throw error
       }
     },
@@ -153,26 +187,33 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // 刷新token
+// 刷新token
     async refreshToken() {
       try {
         const refreshToken = getRefreshToken()
         if (!refreshToken) {
           throw new Error('No refresh token available')
         }
-        
+
         const response = await authAPI.refreshToken(refreshToken)
+
+        console.log('刷新token响应:', response)
+
+        // 响应拦截器已经处理了，response 格式为 { code, message, data }
         const tokenData = response.data
-        
+
         const { accessToken, refreshToken: newRefreshToken } = tokenData
-        
+
         this.token = accessToken
         this.refreshToken = newRefreshToken
         setAccessToken(accessToken)
         setRefreshToken(newRefreshToken)
-        
+
+        console.log('Token刷新成功')
+
         return tokenData
       } catch (error) {
+        console.error('刷新token失败:', error)
         this.logout()
         throw error
       }

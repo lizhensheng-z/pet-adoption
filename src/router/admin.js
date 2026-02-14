@@ -1,6 +1,6 @@
 export default [
   {
-    path: '/admin',
+    path: '/admin', // 绝对路径
     name: 'AdminDashboard',
     component: () => import('@/views/admin/Dashboard.vue'),
     meta: { requiresAuth: true, permission: 'admin:access', title: '管理首页' }
