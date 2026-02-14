@@ -1,12 +1,12 @@
 <template>
-  <AppLayout>
+
     <PageHeader title="申请详情" />
     <div class="page-container">
       <div class="page-content">
         <el-skeleton :rows="8" animated />
       </div>
     </div>
-  </AppLayout>
+
 </template>
 
 <script setup>

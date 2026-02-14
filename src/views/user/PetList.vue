@@ -1,5 +1,5 @@
 <template>
-  <AppLayout>
+
     <PageHeader title="宠物列表" />
     
     <!-- 搜索和筛选 -->
@@ -130,7 +130,6 @@
         </div>
       </div>
     </div>
-  </AppLayout>
 </template>
 
 <script setup>

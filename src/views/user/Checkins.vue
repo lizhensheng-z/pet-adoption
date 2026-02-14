@@ -1,12 +1,12 @@
 <template>
-  <AppLayout>
+
     <PageHeader title="我的打卡" />
     <div class="page-container">
       <div class="page-content">
         <el-empty description="我的打卡功能开发中..." />
       </div>
     </div>
-  </AppLayout>
+
 </template>
 
 <script setup>

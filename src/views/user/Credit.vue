@@ -1,5 +1,4 @@
 <template>
-  <AppLayout>
     <PageHeader title="信用中心" />
     
     <div class="credit-page">
@@ -114,7 +113,7 @@
         </el-card>
       </div>
     </div>
-  </AppLayout>
+
 </template>
 
 <script setup>

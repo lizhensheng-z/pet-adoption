@@ -1,5 +1,4 @@
 <template>
-  <AppLayout>
     <PageHeader title="首页" />
     
     <!-- 搜索区域 -->
@@ -68,7 +67,7 @@
         </div>
       </div>
     </div>
-  </AppLayout>
+
 </template>
 
 <script setup>

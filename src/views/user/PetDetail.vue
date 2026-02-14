@@ -1,10 +1,10 @@
 <template>
-  <AppLayout>
+
     <PageHeader title="宠物详情" />
     <div class="page-container">
       <el-skeleton :rows="10" animated />
     </div>
-  </AppLayout>
+
 </template>
 
 <script setup>

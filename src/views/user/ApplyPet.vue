@@ -1,12 +1,12 @@
 <template>
-  <AppLayout>
+
     <PageHeader title="申请领养" />
     <div class="page-container">
       <div class="page-content">
         <el-empty description="申请领养功能开发中..." />
       </div>
     </div>
-  </AppLayout>
+
 </template>
 
 <script setup>
