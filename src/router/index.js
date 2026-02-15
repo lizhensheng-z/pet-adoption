@@ -69,14 +69,23 @@ router.beforeEach(async (to, from, next) => {
     return
   }
 
-  // 3. 权限检查
+// 3. 权限检查
   if (to.meta.permission && token) {
     const userRole = getUserRoleFromToken()
     const requiredPermission = to.meta.permission
-    
+
+    console.log('=== 路由权限检查 ===')
+    console.log('目标路径:', to.path)
+    console.log('所需权限:', requiredPermission)
+    console.log('从token获取的角色:', userRole)
+    console.log('完整token:', token)
+
     // 检查用户角色和权限
     const hasPermission = checkUserPermission(userRole, requiredPermission)
-    
+
+    console.log('权限检查结果:', hasPermission)
+    console.log('===================')
+
     if (!hasPermission) {
       // 无权限，重定向到无权限页面或首页
       next('/403')

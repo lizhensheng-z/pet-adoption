@@ -92,5 +92,28 @@ export function getUserIdFromToken() {
 // 从accessToken获取用户角色
 export function getUserRoleFromToken() {
   const payload = getTokenPayload(getAccessToken())
-  return payload?.role || null
+  
+  // 优先从 role 字段获取
+  if (payload?.role) {
+    return payload.role
+  }
+  
+  // 如果没有 role 字段，从 authorities 数组中提取
+  if (payload?.authorities && Array.isArray(payload.authorities)) {
+    // 将 ['ROLE_ORG', 'ROLE_ADMIN'] 转换为 ['ORG', 'ADMIN']
+    const authorities = payload.authorities.map(auth => {
+      if (auth.startsWith('ROLE_')) {
+        return auth.replace('ROLE_', '')
+      }
+      return auth
+    })
+    
+    // 返回第一个非普通用户的角色
+    // 优先级: ADMIN > ORG > USER
+    if (authorities.includes('ADMIN')) return 'ADMIN'
+    if (authorities.includes('ORG')) return 'ORG'
+    if (authorities.includes('USER')) return 'USER'
+  }
+  
+  return null
 }

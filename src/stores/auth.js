@@ -61,14 +61,16 @@ export const useAuthStore = defineStore('auth', {
         setAccessToken(accessToken)
         setRefreshToken(refreshToken)
 
-        // 设置用户信息（使用 userId 字段）
+// 设置用户信息（使用 userId 字段）
         this.user = {
           id: userId,
           username: username,
           role: role,
           avatar: avatar
         }
-        this.permissions = permissions || []
+
+        // 转换权限格式：将 ROLE_ORG, ROLE_ADMIN 等转换为具体的权限列表
+        this.permissions = this.convertPermissions(permissions || [])
 
         console.log('登录成功，用户信息:', this.user)
         console.log('当前角色:', role)
@@ -237,7 +239,7 @@ export const useAuthStore = defineStore('auth', {
       return this.hasPermission(permission)
     },
 
-    // 初始化用户信息（页面刷新时调用）
+// 初始化用户信息（页面刷新时调用）
     async initUserInfo() {
       if (this.token && !this.user) {
         try {
@@ -246,6 +248,63 @@ export const useAuthStore = defineStore('auth', {
           console.error('初始化用户信息失败:', error)
         }
       }
+    },
+
+    // 转换权限格式
+    convertPermissions(rolePermissions) {
+      const permissionMap = {
+        'ROLE_ADMIN': [
+          'admin:access',
+          'admin:user:list',
+          'admin:user:create',
+          'admin:user:edit',
+          'admin:user:delete',
+          'admin:org:list',
+          'admin:org:create',
+          'admin:org:edit',
+          'admin:org:delete',
+          'admin:statistics:view',
+          '*'
+        ],
+        'ROLE_ORG': [
+          'org:access',
+          'org:pet:list',
+          'org:pet:create',
+          'org:pet:edit',
+          'org:adoption:list',
+          'org:adoption:view',
+          'org:followup:list',
+          'org:profile:edit',
+          'org:statistics:view'
+        ],
+        'ROLE_USER': [
+          'user:access',
+          'user:pet:list',
+          'user:pet:view',
+          'user:application:list',
+          'user:application:create',
+          'user:application:view',
+          'user:application:cancel',
+          'user:profile:edit'
+        ]
+      }
+
+      let permissions = []
+
+      // 如果已经包含具体权限，直接使用
+      if (rolePermissions.length > 0 && !rolePermissions.some(p => p.startsWith('ROLE_'))) {
+        return rolePermissions
+      }
+
+      // 将角色权限转换为具体权限
+      rolePermissions.forEach(role => {
+        if (permissionMap[role]) {
+          permissions = [...permissions, ...permissionMap[role]]
+        }
+      })
+
+      console.log('转换权限 - 角色:', rolePermissions, '-> 具体权限:', permissions)
+      return permissions
     }
   }
 })
