@@ -24,16 +24,16 @@ export default [
     meta: { requiresAuth: true, permission: 'org:pet:edit', title: '编辑宠物' }
   },
   {
-    path: '/org/applications',
-    name: 'OrgApplications',
-    component: () => import('@/views/org/Applications.vue'),
-    meta: { requiresAuth: true, permission: 'org:application:list', title: '申请管理' }
+    path: '/org/adoptions',
+    name: 'OrgAdoptions',
+    component: () => import('@/views/org/Adoptions.vue'),
+    meta: { requiresAuth: true, permission: 'org:adoption:list', title: '领养申请管理' }
   },
   {
-    path: '/org/applications/:id',
-    name: 'OrgApplicationDetail',
-    component: () => import('@/views/org/ApplicationDetail.vue'),
-    meta: { requiresAuth: true, permission: 'org:application:view', title: '申请详情' }
+    path: '/org/adoptions/:id',
+    name: 'OrgAdoptionDetail',
+    component: () => import('@/views/org/AdoptionDetail.vue'),
+    meta: { requiresAuth: true, permission: 'org:adoption:view', title: '申请详情审核' }
   },
   {
     path: '/org/adoptions',

@@ -376,7 +376,7 @@ const applyForAdoption = async () => {
   recordBehavior('APPLY')
 
   // 跳转到申请页面
-  router.push(`/pets/${petDetail.value.id}/apply`)
+  router.push(`/apply/${petDetail.value.id}`)
 }
 
 // 检查收藏状态
