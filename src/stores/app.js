@@ -88,7 +88,7 @@ export const useAppStore = defineStore('app', {
       localStorage.setItem('location', JSON.stringify(this.location))
     },
 
-    // 获取用户位置
+// 获取用户位置
     async getUserLocation() {
       return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
@@ -100,18 +100,29 @@ export const useAppStore = defineStore('app', {
           async (position) => {
             const { latitude, longitude } = position.coords
             this.setLocation({ latitude, longitude })
-            
-            // TODO: 调用地理编码API获取城市和地址信息
+
+            console.log('获取到GPS坐标:', latitude, longitude)
+
+            // 调用高德地图逆地理编码API获取城市和地址信息
             try {
-              // const addressInfo = await geocode(latitude, longitude)
-              // this.setLocation({
-              //   city: addressInfo.city,
-              //   address: addressInfo.address
-              // })
+              const { MapUtils } = await import('@/utils/map.js')
+              const addressInfo = await MapUtils.amap.reverseGeocode(latitude, longitude)
+
+              console.log('逆地理编码结果:', addressInfo)
+
+              if (addressInfo) {
+                this.setLocation({
+                  city: addressInfo.city,
+                  address: addressInfo.formattedAddress,
+                  province: addressInfo.province,
+                  district: addressInfo.district,
+                  street: addressInfo.street
+                })
+              }
             } catch (error) {
               console.error('获取地址信息失败:', error)
             }
-            
+
             resolve(this.location)
           },
           (error) => {

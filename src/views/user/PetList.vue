@@ -190,7 +190,6 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import AppLayout from '@/components/layout/AppLayout.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import PetCard from '@/components/common/PetCard.vue'
 import { Search, Filter, Grid, List } from '@element-plus/icons-vue'

@@ -27,18 +27,25 @@
 
       <!-- 操作区域 -->
       <div class="action-section">
-        <!-- 位置信息 -->
+<!-- 位置信息 -->
         <div class="location-info" v-if="!isMobile">
-          <el-dropdown @command="handleLocationCommand">
-            <span class="location-trigger">
-              <el-icon><Location /></el-icon>
-              {{ currentCity }}
-              <el-icon><ArrowDown /></el-icon>
+          <el-dropdown @command="handleLocationCommand" :disabled="locationLoading">
+            <span class="location-trigger" :class="{ loading: locationLoading }">
+              <el-icon v-if="locationLoading" class="is-loading"><Loading /></el-icon>
+              <el-icon v-else><Location /></el-icon>
+              {{ locationLoading ? '定位中...' : currentCity }}
+              <el-icon v-if="!locationLoading"><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="refresh">刷新位置</el-dropdown-item>
-                <el-dropdown-item command="change">切换城市</el-dropdown-item>
+                <el-dropdown-item command="refresh" :disabled="locationLoading">
+                  <el-icon v-if="locationLoading" class="is-loading"><Loading /></el-icon>
+                  {{ locationLoading ? '定位中...' : '刷新位置' }}
+                </el-dropdown-item>
+                <el-dropdown-item command="change">
+                  <el-icon><LocationInformation /></el-icon>
+                  切换城市
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -98,7 +105,7 @@
       </div>
     </div>
 
-    <!-- 移动端搜索框 -->
+<!-- 移动端搜索框 -->
     <div class="mobile-search" v-if="isMobile && showMobileSearch">
       <el-input
         v-model="searchKeyword"
@@ -113,6 +120,9 @@
         </template>
       </el-input>
     </div>
+
+    <!-- 城市选择器 -->
+    <CitySelector ref="citySelectorRef" />
   </header>
 </template>
 
@@ -122,9 +132,10 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth.js'
 import { useAppStore } from '@/stores/app.js'
+import CitySelector from '@/components/common/CitySelector.vue'
 import {
   Search, Location, ArrowDown, Bell, User, Star,
-  Document, SwitchButton, Menu
+  Document, SwitchButton, Menu, Loading, LocationInformation
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -135,6 +146,8 @@ const appStore = useAppStore()
 const searchKeyword = ref('')
 const unreadCount = ref(0)
 const showMobileSearch = ref(false)
+const locationLoading = ref(false)
+const citySelectorRef = ref(null)
 
 // 计算属性
 const isMobile = computed(() => window.innerWidth <= 768)
@@ -163,10 +176,24 @@ const showNotifications = () => {
 const handleLocationCommand = (command) => {
   switch (command) {
     case 'refresh':
-      appStore.getUserLocation().catch(console.error)
+      locationLoading.value = true
+      appStore.getUserLocation()
+        .then(() => {
+          ElMessage.success('位置已更新')
+        })
+        .catch((error) => {
+          console.error('获取位置失败:', error)
+          ElMessage.error('获取位置失败，请检查浏览器权限设置')
+        })
+        .finally(() => {
+          locationLoading.value = false
+        })
       break
     case 'change':
-      // TODO: 显示城市选择器
+      // 打开城市选择器
+      if (citySelectorRef.value) {
+        citySelectorRef.value.open()
+      }
       break
   }
 }
@@ -268,6 +295,15 @@ const handleLoginClick = () => {
   gap: 4px;
   color: #666;
   font-size: 14px;
+  transition: color 0.3s;
+}
+
+.location-trigger:hover {
+  color: #FF8C42;
+}
+
+.location-trigger.loading {
+  color: #FF8C42;
 }
 
 .notification-section .el-button {

@@ -120,7 +120,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { creditAPI } from '@/api/modules/credit.js'
-import AppLayout from '@/components/layout/AppLayout.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { Medal, Top, Bottom } from '@element-plus/icons-vue'
 

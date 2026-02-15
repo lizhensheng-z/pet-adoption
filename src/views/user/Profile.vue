@@ -117,7 +117,6 @@ import { useAuthStore } from '@/stores/auth.js'
 import { useUserStore } from '@/stores/user.js'
 import { useAppStore } from '@/stores/app.js'
 import { creditAPI } from '@/api/modules/credit.js'
-import AppLayout from '@/components/layout/AppLayout.vue'
 import {
   User, Setting, Top, Star, Medal, CircleCheck,
   StarFilled, Camera, QuestionFilled, ArrowRight, Loading

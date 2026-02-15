@@ -74,7 +74,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app.js'
-import AppLayout from '@/components/layout/AppLayout.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import PetCard from '@/components/common/PetCard.vue'
 import { Search, ArrowRight, MoreFilled, Folder, Star, Clock, Compass } from '@element-plus/icons-vue'

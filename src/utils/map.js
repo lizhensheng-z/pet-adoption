@@ -112,26 +112,189 @@ export class MapUtils {
     }
   }
 
-  // 高德地图API封装（备选）
+// 高德地图API封装（备选）
   static amap = {
-    // 地理编码
+    apiKey: '61367e2d3e9fcade23b0817da7a63c82',
+
+    // 地理编码（地址转坐标）
     async geocode(address) {
       try {
-        // TODO: 集成高德地图地理编码API
-        throw new Error('高德地图API未配置')
+        const url = `https://restapi.amap.com/v3/geocode/geo?key=${this.apiKey}&address=${encodeURIComponent(address)}`
+        const response = await fetch(url)
+        const data = await response.json()
+
+        if (data.status === '1' && data.geocodes && data.geocodes.length > 0) {
+          const geocode = data.geocodes[0]
+          const location = geocode.location.split(',')
+          return {
+            latitude: parseFloat(location[1]),
+            longitude: parseFloat(location[0]),
+            formattedAddress: geocode.formatted_address,
+            province: geocode.province,
+            city: geocode.city,
+            district: geocode.district,
+            adcode: geocode.adcode
+          }
+        }
+
+        console.warn('高德地理编码未找到结果:', data)
+        return null
       } catch (error) {
-        console.error('地理编码失败:', error)
+        console.error('高德地理编码失败:', error)
         return null
       }
     },
 
-    // 逆地理编码
+    // 逆地理编码（坐标转地址）
     async reverseGeocode(lat, lng) {
       try {
-        // TODO: 集成高德地图逆地理编码API
-        throw new Error('高德地图API未配置')
+        const url = `https://restapi.amap.com/v3/geocode/regeo?key=${this.apiKey}&location=${lng},${lat}&extensions=all`
+        const response = await fetch(url)
+        const data = await response.json()
+
+        if (data.status === '1' && data.regeocode) {
+          const regeocode = data.regeocode
+          return {
+            formattedAddress: regeocode.formatted_address,
+            province: regeocode.addressComponent.province,
+            city: regeocode.addressComponent.city || regeocode.addressComponent.province,
+            district: regeocode.addressComponent.district,
+            street: regeocode.addressComponent.street,
+            streetNumber: regeocode.addressComponent.streetNumber,
+            adcode: regeocode.addressComponent.adcode,
+            township: regeocode.addressComponent.township,
+            poi: regeocode.pois ? regeocode.pois[0] : null
+          }
+        }
+
+        console.warn('高德逆地理编码未找到结果:', data)
+        return null
       } catch (error) {
-        console.error('逆地理编码失败:', error)
+        console.error('高德逆地理编码失败:', error)
+        return null
+      }
+    },
+
+    // 周边搜索
+    async searchNearby(lat, lng, keyword, radius = 1000) {
+      try {
+        const url = `https://restapi.amap.com/v3/place/around?key=${this.apiKey}&location=${lng},${lat}&keywords=${encodeURIComponent(keyword)}&radius=${radius}&output=json`
+        const response = await fetch(url)
+        const data = await response.json()
+
+        if (data.status === '1' && data.pois) {
+          return data.pois.map(poi => ({
+            id: poi.id,
+            name: poi.name,
+            address: poi.address,
+            location: {
+              latitude: parseFloat(poi.location.split(',')[1]),
+              longitude: parseFloat(poi.location.split(',')[0])
+            },
+            distance: parseInt(poi.distance),
+            type: poi.type,
+            tel: poi.tel,
+            businessArea: poi.businessarea,
+            pinyin: poi.pinyin
+          }))
+        }
+
+        console.warn('高德周边搜索未找到结果:', data)
+        return []
+      } catch (error) {
+        console.error('高德周边搜索失败:', error)
+        return []
+      }
+    },
+
+    // POI 关键词搜索
+    async searchPOI(keyword, city = '', limit = 20) {
+      try {
+        let url = `https://restapi.amap.com/v3/place/text?key=${this.apiKey}&keywords=${encodeURIComponent(keyword)}&output=json&offset=${limit}`
+        if (city) {
+          url += `&city=${encodeURIComponent(city)}`
+        }
+
+        const response = await fetch(url)
+        const data = await response.json()
+
+        if (data.status === '1' && data.pois) {
+          return data.pois.map(poi => ({
+            id: poi.id,
+            name: poi.name,
+            address: poi.address,
+            location: {
+              latitude: parseFloat(poi.location.split(',')[1]),
+              longitude: parseFloat(poi.location.split(',')[0])
+            },
+            type: poi.type,
+            tel: poi.tel,
+            cityname: poi.cityname,
+            adname: poi.adname
+          }))
+        }
+
+        console.warn('高德POI搜索未找到结果:', data)
+        return []
+      } catch (error) {
+        console.error('高德POI搜索失败:', error)
+        return []
+      }
+    },
+
+    // 天气查询
+    async getWeather(city) {
+      try {
+        const url = `https://restapi.amap.com/v3/weather/weatherInfo?key=${this.apiKey}&city=${encodeURIComponent(city)}&extensions=base`
+        const response = await fetch(url)
+        const data = await response.json()
+
+        if (data.status === '1' && data.lives && data.lives.length > 0) {
+          const weather = data.lives[0]
+          return {
+            province: weather.province,
+            city: weather.city,
+            weather: weather.weather,
+            temperature: weather.temperature,
+            winddirection: weather.winddirection,
+            windpower: weather.windpower,
+            humidity: weather.humidity,
+            reporttime: weather.reporttime
+          }
+        }
+
+        return null
+      } catch (error) {
+        console.error('高德天气查询失败:', error)
+        return null
+      }
+    },
+
+    // 路径规划（驾车）
+    async getDrivingRoute(startLng, startLat, endLng, endLat) {
+      try {
+        const url = `https://restapi.amap.com/v3/direction/driving?key=${this.apiKey}&origin=${startLng},${startLat}&destination=${endLng},${endLat}&extensions=all`
+        const response = await fetch(url)
+        const data = await response.json()
+
+        if (data.status === '1' && data.route && data.route.paths.length > 0) {
+          const path = data.route.paths[0]
+          return {
+            distance: parseInt(path.distance), // 米
+            duration: parseInt(path.duration), // 秒
+            steps: path.steps.map(step => ({
+              instruction: step.instruction,
+              distance: parseInt(step.distance),
+              duration: parseInt(step.duration),
+              action: step.action,
+              polyline: step.polyline
+            }))
+          }
+        }
+
+        return null
+      } catch (error) {
+        console.error('高德路径规划失败:', error)
         return null
       }
     }

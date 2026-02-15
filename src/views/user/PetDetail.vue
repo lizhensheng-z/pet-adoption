@@ -147,7 +147,6 @@ import {
   Star,
   StarFilled
 } from '@element-plus/icons-vue'
-import AppLayout from '@/components/layout/AppLayout.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import PetCard from '@/components/common/PetCard.vue'
 import { petAPI, applicationAPI } from '@/api/modules/pet.js'
