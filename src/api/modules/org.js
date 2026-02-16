@@ -19,22 +19,37 @@ export const orgAPI = {
 
   // 创建宠物档案
   createPet(data) {
-    return http.post('/org/pets', data)
+    return http.post('/pets/org/createPet', data)
   },
 
   // 更新宠物信息
   updatePet(id, data) {
-    return http.put(`/org/pets/${id}`, data)
+    return http.put(`/pets/org/pets/${id}`, data)
   },
 
   // 删除宠物
   deletePet(id) {
-    return http.delete(`/org/pets/${id}`)
+    return http.delete(`/pets/org/pets/${id}`)
   },
 
-  // 上传宠物图片/视频
-  uploadPetMedia(petId, formData) {
-    return http.upload(`/org/pets/${petId}/media`, formData)
+// 保存宠物媒体关联（不包含文件上传）
+  savePetMedia(petId, data) {
+    return http.post(`/org/pets/${petId}/media`, data)
+  },
+
+  // 删除宠物媒体
+  deletePetMedia(petId, mediaId) {
+    return http.delete(`/org/pets/${petId}/media/${mediaId}`)
+  },
+
+  // 提交审核
+  submitPetAudit(id) {
+    return http.post(`/pets/org/pets/${id}/submit-audit`)
+  },
+
+  // 获取标签列表
+  getTagList(params = {}) {
+    return http.get('/tags', params)
   },
 
   // 获取申请管理列表
@@ -62,8 +77,45 @@ export const orgAPI = {
     return http.post('/org/followups', data)
   },
 
-  // 获取统计数据
+// 获取统计数据
   getStatistics(params = {}) {
     return http.get('/org/statistics', params)
+  },
+
+  // ========== Dashboard 首页相关 ==========
+
+  // 获取首页统计数据
+  getDashboardStatistics() {
+    return http.get('/org/dashboard/statistics')
+  },
+
+  // 获取待办事项列表
+  getDashboardTodos(params = {}) {
+    return http.get('/org/dashboard/todos', params)
+  },
+
+  // 获取首页综合数据（推荐使用）
+  getDashboardHome() {
+    return http.get('/org/dashboard/home')
+  },
+
+  // 获取机构基本信息
+  getOrgProfile() {
+    return http.get('/org/profile')
+  },
+
+  // 获取最近宠物列表
+  getRecentPets(params = {}) {
+    return http.get('/org/pets/recent', params)
+  },
+
+  // 获取最新申请列表
+  getRecentApplications(params = {}) {
+    return http.get('/org/applications/recent', params)
+  },
+
+  // 获取回访提醒列表
+  getFollowupReminders(params = {}) {
+    return http.get('/org/followup/reminders', params)
   }
 }

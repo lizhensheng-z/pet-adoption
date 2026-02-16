@@ -2,242 +2,470 @@
   <div class="org-dashboard">
     <PageHeader title="机构管理首页">
       <template #actions>
-        <el-button type="primary" @click="router.push('/org/pets/create')">
+        <el-button type="primary" @click="handleCreatePet">
           <el-icon><Plus /></el-icon>
           发布宠物
         </el-button>
       </template>
     </PageHeader>
 
-    <!-- 统计卡片 -->
-    <div class="stats-section">
-      <div class="page-container">
-        <el-row :gutter="24">
-          <el-col :xs="12" :sm="6">
-            <el-card class="stat-card">
-              <div class="stat-content">
-                <div class="stat-icon" style="background: linear-gradient(45deg, #67C23A, #85CE61);">
-                  <el-icon size="24"><Files /></el-icon>
-                </div>
-                <div class="stat-info">
-                  <div class="stat-number">{{ stats.totalPets }}</div>
-                  <div class="stat-label">在养宠物</div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-          
-          <el-col :xs="12" :sm="6">
-            <el-card class="stat-card">
-              <div class="stat-content">
-                <div class="stat-icon" style="background: linear-gradient(45deg, #E6A23C, #EEBE77);">
-                  <el-icon size="24"><Document /></el-icon>
-                </div>
-                <div class="stat-info">
-                  <div class="stat-number">{{ stats.pendingApplications }}</div>
-                  <div class="stat-label">待处理申请</div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-          
-          <el-col :xs="12" :sm="6">
-            <el-card class="stat-card">
-              <div class="stat-content">
-                <div class="stat-icon" style="background: linear-gradient(45deg, #409EFF, #66B1FF);">
-                  <el-icon size="24"><Check /></el-icon>
-                </div>
-                <div class="stat-info">
-                  <div class="stat-number">{{ stats.monthlyAdoptions }}</div>
-                  <div class="stat-label">本月领养</div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-          
-          <el-col :xs="12" :sm="6">
-            <el-card class="stat-card">
-              <div class="stat-content">
-                <div class="stat-icon" style="background: linear-gradient(45deg, #F56C6C, #F78989);">
-                  <el-icon size="24"><Clock /></el-icon>
-                </div>
-                <div class="stat-info">
-                  <div class="stat-number">{{ stats.pendingFollowups }}</div>
-                  <div class="stat-label">待回访</div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-        </el-row>
-      </div>
-    </div>
-
-    <!-- 待办事项 -->
-    <div class="todo-section">
-      <div class="page-container">
-        <el-card>
-          <template #header>
-            <div class="card-header">
-              <h3>待办事项</h3>
-              <el-button text @click="router.push('/org/applications')">
-                查看全部
-              </el-button>
-            </div>
-          </template>
-          
-          <div v-if="todos.length === 0" class="empty-todos">
-            <el-empty description="暂无待办事项" />
-          </div>
-          
-          <div v-else class="todo-list">
-            <div 
-              v-for="todo in todos" 
-              :key="todo.id"
-              class="todo-item"
-            >
-              <div class="todo-icon">
-                <el-icon><Warning /></el-icon>
-              </div>
-              <div class="todo-content">
-                <div class="todo-title">{{ todo.title }}</div>
-                <div class="todo-time">{{ formatTime(todo.createdAt) }}</div>
-              </div>
-              <el-button 
-                type="primary" 
-                size="small"
-                @click="handleTodoClick(todo)"
-              >
-                处理
-              </el-button>
-            </div>
-          </div>
-        </el-card>
-      </div>
-    </div>
-
-    <!-- 快捷操作 -->
-    <div class="quick-actions">
-      <div class="page-container">
+    <div class="dashboard-content">
+      <!-- 统计卡片 -->
+      <div class="stats-section">
         <el-row :gutter="16">
           <el-col :xs="12" :sm="6">
-            <div class="action-item" @click="router.push('/org/pets')">
-              <el-icon size="32"><Management /></el-icon>
-              <div>宠物管理</div>
-            </div>
+            <StatCard
+              title="在养宠物"
+              :value="stats.totalPets"
+              icon="Files"
+              color="#67C23A"
+              @click="router.push('/org/pets')"
+            />
           </el-col>
-          
+
           <el-col :xs="12" :sm="6">
-            <div class="action-item" @click="router.push('/org/applications')">
-              <el-icon size="32"><Document /></el-icon>
-              <div>申请管理</div>
-            </div>
+            <StatCard
+              title="待处理申请"
+              :value="stats.pendingApplications"
+              icon="Document"
+              color="#E6A23C"
+              @click="router.push('/org/applications')"
+            />
           </el-col>
-          
+
           <el-col :xs="12" :sm="6">
-            <div class="action-item" @click="router.push('/org/followup')">
-              <el-icon size="32"><Phone /></el-icon>
-              <div>回访管理</div>
-            </div>
+            <StatCard
+              title="本月领养"
+              :value="stats.monthlyAdoptions"
+              icon="Check"
+              color="#409EFF"
+              @click="router.push('/org/adoptions')"
+            />
           </el-col>
-          
+
           <el-col :xs="12" :sm="6">
-            <div class="action-item" @click="router.push('/org/statistics')">
-              <el-icon size="32"><DataAnalysis /></el-icon>
-              <div>统计数据</div>
-            </div>
+            <StatCard
+              title="待回访"
+              :value="stats.pendingFollowups"
+              icon="Clock"
+              color="#F56C6C"
+              @click="router.push('/org/followup')"
+            />
           </el-col>
         </el-row>
+      </div>
+
+      <!-- 快捷操作 -->
+      <div class="quick-actions-section">
+        <QuickActions @action="handleQuickAction" />
+      </div>
+
+      <!-- 待办事项 -->
+      <div class="todos-section">
+        <DashboardTodoList
+          :todos="todos"
+          :total-count="todosTotalCount"
+          :loading="loading"
+          @refresh="loadDashboardData"
+        />
+      </div>
+
+      <!-- 最近宠物 -->
+      <div class="recent-pets-section">
+        <DashboardRecentPets
+          :pets="recentPets"
+          :loading="loading"
+          @refresh="loadDashboardData"
+        />
+      </div>
+
+      <!-- 最近申请 -->
+      <div class="recent-applications-section">
+        <DashboardRecentApplications
+          :applications="recentApplications"
+          :loading="loading"
+          @refresh="loadDashboardData"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
+import { orgAPI } from '@/api/modules/org.js'
+import { ElMessage } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
+
+// 组件导入
 import PageHeader from '@/components/common/PageHeader.vue'
-import { 
-  Plus, Files, Document, Check, Clock, Warning, 
-  Management, Phone, DataAnalysis 
-} from '@element-plus/icons-vue'
+import StatCard from '@/components/org/StatCard.vue'
+import QuickActions from '@/components/org/QuickActions.vue'
+import DashboardTodoList from '@/components/org/DashboardTodoList.vue'
+import DashboardRecentPets from '@/components/org/DashboardRecentPets.vue'
+import DashboardRecentApplications from '@/components/org/DashboardRecentApplications.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 // 响应式数据
+const loading = ref(false)
+const error = ref(null)
+
+// 统计数据
 const stats = ref({
   totalPets: 0,
   pendingApplications: 0,
   monthlyAdoptions: 0,
-  pendingFollowups: 0
+  pendingFollowups: 0,
+  totalAdoptions: 0,
+  publishedPets: 0,
+  draftPets: 0,
+  underReviewPets: 0
 })
 
+// 待办事项
 const todos = ref([])
+const todosTotalCount = ref(0)
 
-// 方法
-const formatTime = (time) => {
-  return new Date(time).toLocaleString()
+// 最近宠物
+const recentPets = ref([])
+
+// 最近申请
+const recentApplications = ref([])
+
+// 机构信息
+const orgInfo = ref(null)
+
+// 定时刷新定时器
+let refreshTimer = null
+
+// 加载首页数据
+const loadDashboardData = async () => {
+  try {
+    loading.value = true
+    error.value = null
+
+    console.log('开始加载首页数据...')
+
+    // 使用综合接口获取所有数据
+    const response = await orgAPI.getDashboardHome()
+
+console.log('综合接口响应:', response)
+
+    // 更新统计数据
+    stats.value = response.data?.statistics || {}
+
+    // 更新待办事项
+    todos.value = response.data?.todos || []
+    todosTotalCount.value = response.data?.todos?.length || 0
+
+    // 更新最近宠物
+    recentPets.value = response.data?.recentPets || []
+
+    // 更新最近申请
+    recentApplications.value = response.data?.recentApplications || []
+
+    // 更新机构信息
+    orgInfo.value = response.data?.orgInfo || null
+
+    console.log('首页数据加载成功', response)
+  } catch (err) {
+    console.error('加载首页数据失败:', err)
+    console.error('错误详情:', err.message)
+    error.value = err.message
+
+    // 如果综合接口失败，尝试单独接口
+    console.log('尝试降级加载...')
+    await loadFallbackData()
+  } finally {
+    loading.value = false
+  }
 }
 
-const handleTodoClick = (todo) => {
-  // 根据待办类型跳转到相应页面
-  switch (todo.type) {
-    case 'application':
-      router.push(`/org/applications/${todo.id}`)
+// 降级方案：单独加载各项数据
+const loadFallbackData = async () => {
+  try {
+    // 加载统计数据
+    try {
+      const statsResponse = await orgAPI.getDashboardStatistics()
+      stats.value = statsResponse || {}
+    } catch (err) {
+      console.warn('统计数据加载失败，使用模拟数据:', err)
+      stats.value = getMockStats()
+    }
+
+    // 加载待办事项
+    try {
+      const todosResponse = await orgAPI.getDashboardTodos({ limit: 10 })
+      todos.value = todosResponse.todos || []
+      todosTotalCount.value = todosResponse.totalCount || 0
+    } catch (err) {
+      console.warn('待办事项加载失败，使用模拟数据:', err)
+      const mockTodos = getMockTodos()
+      todos.value = mockTodos
+      todosTotalCount.value = mockTodos.length
+    }
+
+    // 加载最近宠物
+    try {
+      const petsResponse = await orgAPI.getRecentPets({ limit: 4 })
+      recentPets.value = petsResponse.list || []
+    } catch (err) {
+      console.warn('最近宠物加载失败，使用模拟数据:', err)
+      recentPets.value = getMockPets()
+    }
+
+    // 加载最近申请
+    try {
+      const appsResponse = await orgAPI.getRecentApplications({ limit: 5 })
+      recentApplications.value = appsResponse.list || []
+    } catch (err) {
+      console.warn('最近申请加载失败，使用模拟数据:', err)
+      recentApplications.value = getMockApplications()
+    }
+
+    console.log('降级加载完成')
+  } catch (err) {
+    console.error('降级加载失败:', err)
+    ElMessage.warning('部分数据加载失败，显示模拟数据用于演示')
+  }
+}
+
+// 模拟统计数据
+const getMockStats = () => ({
+  totalPets: 25,
+  pendingApplications: 8,
+  monthlyAdoptions: 12,
+  pendingFollowups: 3,
+  totalAdoptions: 156,
+  publishedPets: 18,
+  draftPets: 7,
+  underReviewPets: 2
+})
+
+// 模拟待办事项
+const getMockTodos = () => [
+  {
+    id: 1,
+    type: 'application',
+    title: '张三申请领养"小白"',
+    petName: '小白',
+    petId: 789,
+    petCoverUrl: 'https://via.placeholder.com/100',
+    userName: '张三',
+    userId: 456,
+    userAvatar: 'https://via.placeholder.com/50',
+    status: 'SUBMITTED',
+    submitTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    priority: 'high'
+  },
+  {
+    id: 2,
+    type: 'followup',
+    title: '"小花"回访已超期7天',
+    petName: '小花',
+    petId: 791,
+    petCoverUrl: 'https://via.placeholder.com/100',
+    adoptionTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    overdueDays: 7,
+    lastFollowupTime: null,
+    priority: 'urgent'
+  },
+  {
+    id: 3,
+    type: 'audit',
+    title: '"旺财"待管理员审核',
+    petName: '旺财',
+    petId: 792,
+    petCoverUrl: 'https://via.placeholder.com/100',
+    submitTime: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+    status: 'PENDING_AUDIT',
+    priority: 'medium'
+  }
+]
+
+// 模拟最近宠物
+const getMockPets = () => [
+  {
+    id: 789,
+    name: '小白',
+    species: 'CAT',
+    breed: '中华田园猫',
+    ageMonth: 24,
+    gender: 'FEMALE',
+    coverUrl: 'https://via.placeholder.com/200',
+    status: 'PUBLISHED',
+    publishedTime: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    viewCount: 156,
+    favoriteCount: 23,
+    applicationCount: 5
+  },
+  {
+    id: 790,
+    name: '小黑',
+    species: 'DOG',
+    breed: '拉布拉多',
+    ageMonth: 36,
+    gender: 'MALE',
+    coverUrl: 'https://via.placeholder.com/200',
+    status: 'PUBLISHED',
+    publishedTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    viewCount: 289,
+    favoriteCount: 45,
+    applicationCount: 12
+  },
+  {
+    id: 791,
+    name: '小花',
+    species: 'CAT',
+    breed: '英短',
+    ageMonth: 18,
+    gender: 'FEMALE',
+    coverUrl: 'https://via.placeholder.com/200',
+    status: 'PUBLISHED',
+    publishedTime: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    viewCount: 98,
+    favoriteCount: 15,
+    applicationCount: 3
+  },
+  {
+    id: 792,
+    name: '旺财',
+    species: 'DOG',
+    breed: '金毛',
+    ageMonth: 48,
+    gender: 'MALE',
+    coverUrl: 'https://via.placeholder.com/200',
+    status: 'PUBLISHED',
+    publishedTime: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    viewCount: 312,
+    favoriteCount: 56,
+    applicationCount: 18
+  }
+]
+
+// 模拟最近申请
+const getMockApplications = () => [
+  {
+    id: 1001,
+    petId: 789,
+    petName: '小白',
+    petCoverUrl: 'https://via.placeholder.com/100',
+    userId: 456,
+    userName: '张三',
+    userAvatar: 'https://via.placeholder.com/50',
+    status: 'SUBMITTED',
+    statusDesc: '已提交',
+    submitTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: 1002,
+    petId: 790,
+    petName: '小黑',
+    petCoverUrl: 'https://via.placeholder.com/100',
+    userId: 457,
+    userName: '李四',
+    userAvatar: 'https://via.placeholder.com/50',
+    status: 'UNDER_REVIEW',
+    statusDesc: '审核中',
+    submitTime: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: 1003,
+    petId: 791,
+    petName: '小花',
+    petCoverUrl: 'https://via.placeholder.com/100',
+    userId: 458,
+    userName: '王五',
+    userAvatar: 'https://via.placeholder.com/50',
+    status: 'SUBMITTED',
+    statusDesc: '已提交',
+    submitTime: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
+  }
+]
+
+// 创建宠物
+const handleCreatePet = () => {
+  router.push('/org/pets/create')
+}
+
+// 快捷操作处理
+const handleQuickAction = (action) => {
+  switch (action) {
+    case 'pets':
+      router.push('/org/pets')
+      break
+    case 'applications':
+      router.push('/org/applications')
       break
     case 'followup':
-      router.push(`/org/followup`)
+      router.push('/org/followup')
       break
-    default:
+    case 'statistics':
+      router.push('/org/statistics')
       break
   }
 }
 
-const loadDashboardData = async () => {
-  try {
-    // TODO: 调用API获取数据
-    // 模拟数据
-    stats.value = {
-      totalPets: 25,
-      pendingApplications: 8,
-      monthlyAdoptions: 12,
-      pendingFollowups: 3
-    }
-    
-    todos.value = [
-      {
-        id: 1,
-        type: 'application',
-        title: '张三的领养申请待审核',
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
-      },
-      {
-        id: 2,
-        type: 'followup',
-        title: '李四家的回访已超期',
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000)
-      }
-    ]
-  } catch (error) {
-    console.error('加载数据失败:', error)
+// 手动刷新
+const handleRefresh = () => {
+  loadDashboardData()
+}
+
+// 初始化定时刷新
+const startAutoRefresh = () => {
+  // 每5分钟自动刷新一次
+  refreshTimer = setInterval(() => {
+    console.log('自动刷新首页数据')
+    loadDashboardData()
+  }, 5 * 60 * 1000)
+}
+
+// 清除定时刷新
+const stopAutoRefresh = () => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
   }
 }
 
 // 生命周期
-onMounted(() => {
+onMounted(async () => {
+  console.log('=== Dashboard 组件挂载 ===')
+  console.log('登录状态:', authStore.isLoggedIn)
+  console.log('当前用户:', authStore.user)
+  console.log('当前角色:', authStore.userRole)
+  console.log('权限列表:', authStore.permissions)
+  console.log('检查权限 org:access:', authStore.checkPermission('org:access'))
+
   // 检查权限
   if (!authStore.isLoggedIn) {
+    console.log('未登录，跳转到登录页')
     router.push('/login')
     return
   }
-  
+
   if (!authStore.checkPermission('org:access')) {
+    console.log('无 org:access 权限，跳转到403页')
     router.push('/403')
     return
   }
-  
-  loadDashboardData()
+
+  console.log('权限检查通过，开始加载首页数据...')
+
+  // 加载首页数据
+  await loadDashboardData()
+
+  // 启动定时刷新
+  startAutoRefresh()
+})
+
+onUnmounted(() => {
+  // 清除定时刷新
+  stopAutoRefresh()
 })
 </script>
 
@@ -247,161 +475,43 @@ onMounted(() => {
   background: var(--bg-light);
 }
 
+.dashboard-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
 .stats-section {
-  padding: var(--spacing-lg) 0;
+  margin-bottom: var(--spacing-lg);
 }
 
-.stat-card {
-  margin-bottom: var(--spacing-md);
+.quick-actions-section {
+  margin-bottom: var(--spacing-lg);
 }
 
-.stat-content {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
+.todos-section {
+  margin-bottom: var(--spacing-lg);
 }
 
-.stat-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: var(--border-radius-large);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
+.recent-pets-section {
+  margin-bottom: var(--spacing-lg);
 }
 
-.stat-info {
-  flex: 1;
-}
-
-.stat-number {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  margin-top: var(--spacing-xs);
-}
-
-.todo-section {
-  padding: 0 0 var(--spacing-lg) 0;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.card-header h3 {
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.empty-todos {
-  padding: var(--spacing-xl) 0;
-}
-
-.todo-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.todo-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  border: 1px solid var(--border-light);
-  border-radius: var(--border-radius-base);
-  transition: all var(--transition-fast);
-}
-
-.todo-item:hover {
-  border-color: var(--primary-color);
-  box-shadow: var(--shadow-light);
-}
-
-.todo-icon {
-  color: var(--warning-color);
-  flex-shrink: 0;
-}
-
-.todo-content {
-  flex: 1;
-}
-
-.todo-title {
-  font-size: var(--font-size-base);
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-xs);
-}
-
-.todo-time {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.quick-actions {
-  padding: var(--spacing-lg) 0;
-}
-
-.action-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-xl);
-  background: white;
-  border-radius: var(--border-radius-large);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  color: var(--text-regular);
-}
-
-.action-item:hover {
-  background: var(--primary-color);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-base);
+.recent-applications-section {
+  margin-bottom: var(--spacing-lg);
 }
 
 @media (max-width: 768px) {
-  .stats-section {
-    padding: var(--spacing-md) 0;
+  .dashboard-content {
+    padding: var(--spacing-md);
   }
-  
-  .todo-section {
-    padding: var(--spacing-md) 0;
-  }
-  
-  .quick-actions {
-    padding: var(--spacing-md) 0;
-  }
-  
-  .stat-content {
-    gap: var(--spacing-sm);
-  }
-  
-  .stat-icon {
-    width: 50px;
-    height: 50px;
-  }
-  
-  .stat-number {
-    font-size: var(--font-size-lg);
-  }
-  
-  .todo-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
+
+  .stats-section,
+  .quick-actions-section,
+  .todos-section,
+  .recent-pets-section,
+  .recent-applications-section {
+    margin-bottom: var(--spacing-md);
   }
 }
 </style>

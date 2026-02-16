@@ -142,7 +142,7 @@ export const useAuthStore = defineStore('auth', {
         console.log('用户数据:', userData)
 
         // 解构用户数据（注意：后端返回的是 userId）
-        const { userId, username, role, avatar, phone, email, status, createTime, permissions } = userData
+const { userId, username, role, avatar, phone, email, status, createTime, permissions } = userData
 
         this.user = {
           id: userId,
@@ -154,7 +154,8 @@ export const useAuthStore = defineStore('auth', {
           status: status,
           createTime: createTime
         }
-        this.permissions = permissions || []
+        // 转换权限格式（ROLE_ORG -> 具体权限列表）
+        this.permissions = this.convertPermissions(permissions || [])
 
         console.log('用户信息更新成功:', this.user)
 
