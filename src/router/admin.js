@@ -8,33 +8,33 @@ export default [
   {
     path: '/admin/dashboard',
     name: 'AdminDataDashboard',
-    component: () => import('@/views/admin/DataDashboard.vue'),
+    component: () => import('@/views/admin/Dashboard.vue'),
     meta: { requiresAuth: true, permission: 'admin:dashboard:view', title: '数据看板' }
   },
-  {
-    path: '/admin/pet-audits',
-    name: 'AdminPetAudits',
-    component: () => import('@/views/admin/PetAudits.vue'),
-    meta: { requiresAuth: true, permission: 'admin:pet:audit', title: '宠物审核' }
-  },
-  {
-    path: '/admin/pet-audits/:id',
-    name: 'AdminPetAuditDetail',
-    component: () => import('@/views/admin/PetAuditDetail.vue'),
-    meta: { requiresAuth: true, permission: 'admin:pet:audit', title: '审核详情' }
-  },
+  // {
+  //   path: '/admin/pet-audits',
+  //   name: 'AdminPetAudits',
+  //   component: () => import('@/views/admin/PetAudits.vue'),
+  //   meta: { requiresAuth: true, permission: 'admin:pet:audit', title: '宠物审核' }
+  // },
+  // {
+  //   path: '/admin/pet-audits/:id',
+  //   name: 'AdminPetAuditDetail',
+  //   component: () => import('@/views/admin/PetAuditDetail.vue'),
+  //   meta: { requiresAuth: true, permission: 'admin:pet:audit', title: '审核详情' }
+  // },
   {
     path: '/admin/users',
     name: 'AdminUsers',
     component: () => import('@/views/admin/Users.vue'),
     meta: { requiresAuth: true, permission: 'admin:user:list', title: '用户管理' }
   },
-  {
-    path: '/admin/users/:id',
-    name: 'AdminUserDetail',
-    component: () => import('@/views/admin/UserDetail.vue'),
-    meta: { requiresAuth: true, permission: 'admin:user:view', title: '用户详情' }
-  },
+  // {
+  //   path: '/admin/users/:id',
+  //   name: 'AdminUserDetail',
+  //   component: () => import('@/views/admin/UserDetail.vue'),
+  //   meta: { requiresAuth: true, permission: 'admin:user:view', title: '用户详情' }
+  // },
   {
     path: '/admin/tags',
     name: 'AdminTags',

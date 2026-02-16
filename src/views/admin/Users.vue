@@ -205,7 +205,7 @@ import { Download, Refresh, Plus } from '@element-plus/icons-vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 
-import { adminAPI } from '@/api/modules/admin.js'
+import { userApi as adminAPI } from '@/api/modules/admin.js'
 
 const router = useRouter()
 
@@ -283,7 +283,7 @@ const loadUserList = async () => {
       params.startDate = searchForm.value.dateRange[0]
       params.endDate = searchForm.value.dateRange[1]
     }
-    const response = await adminAPI.getUsers(params)
+    const response = await adminAPI.getUserList(params)
     tableData.value.list = response.data.list
     tableData.value.total = response.data.total
   } catch (error) {

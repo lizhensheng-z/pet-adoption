@@ -267,7 +267,7 @@ import {
 } from '@element-plus/icons-vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
-import { adminAPI } from '@/api/modules/admin.js'
+import { userApi as adminAPI } from '@/api/modules/admin.js'
 
 const route = useRoute()
 const router = useRouter()

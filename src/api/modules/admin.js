@@ -1,112 +1,184 @@
-import http from '../request.js'
+// 管理端相关API
+import http from '@/api/request.js'
 
-// 管理员相关API
-export const adminAPI = {
-  // 获取数据看板
-  getDashboard(params = {}) {
-    return http.get('/admin/dashboard', params)
-  },
-
-  // 获取宠物审核列表
-  getPetAudits(params) {
-    return http.get('/admin/pet-audits', params)
-  },
-
-  // 审核宠物
-  auditPet(id, action, data = {}) {
-    return http.put(`/admin/pet-audits/${id}/${action}`, data)
-  },
-
-  // 获取用户管理列表
-  getUsers(params) {
-    return http.get('/admin/users', params)
-  },
-
-  // 获取用户详情
-  getUserDetail(id) {
-    return http.get(`/admin/users/${id}`)
-  },
-
-  // 更新用户信息
-  updateUser(id, data) {
-    return http.put(`/admin/users/${id}`, data)
-  },
-
-  // 更新用户状态
-  updateUserStatus(id, status) {
-    return http.put(`/admin/users/${id}/status`, { status })
-  },
-
-  // 批量更新用户状态
-  batchUpdateUserStatus(userIds, status) {
-    return http.put('/admin/users/batch-status', { userIds, status })
-  },
-
-  // 批量删除用户
-  batchDeleteUsers(userIds) {
-    return http.delete('/admin/users/batch', { userIds })
-  },
-
-  // 导出用户数据
-  exportUsers(params) {
-    return http.get('/admin/users/export', params, {
-      responseType: 'blob'
-    })
-  },
-
-  // 获取标签管理列表
-  getTags(params = {}) {
-    return http.get('/admin/tags', params)
-  },
-
-  // 创建标签
-  createTag(data) {
-    return http.post('/admin/tags', data)
-  },
-
-  // 更新标签
-  updateTag(id, data) {
-    return http.put(`/admin/tags/${id}`, data)
-  },
-
-  // 删除标签
-  deleteTag(id) {
-    return http.delete(`/admin/tags/${id}`)
-  },
-
-  // 获取系统配置
-  getConfig() {
-    return http.get('/admin/config')
-  },
-
-  // 更新系统配置
-  updateConfig(data) {
-    return http.put('/admin/config', data)
-  },
-
-  // 获取公告管理列表
-  getNotices(params) {
-    return http.get('/admin/notices', params)
-  },
-
-  // 创建公告
-  createNotice(data) {
-    return http.post('/admin/notices', data)
-  },
-
-  // 更新公告
-  updateNotice(id, data) {
-    return http.put(`/admin/notices/${id}`, data)
-  },
-
-  // 删除公告
-  deleteNotice(id) {
-    return http.delete(`/admin/notices/${id}`)
-  },
-
-  // 获取审计日志
-  getAuditLogs(params) {
-    return http.get('/admin/audit-logs', params)
-  }
+// 公告管理相关API
+export const noticeApi = {
+  // 获取公告列表
+  getNoticeList: (params) => http.get('/admin/notices', params),
   
+  // 获取公告详情
+  getNoticeDetail: (id) => http.get(`/admin/notices/${id}`),
+  
+  // 创建公告
+  createNotice: (data) => http.post('/admin/notices', data),
+  
+  // 更新公告
+  updateNotice: (id, data) => http.put(`/admin/notices/${id}`, data),
+  
+  // 删除公告
+  deleteNotice: (id) => http.delete(`/admin/notices/${id}`),
+  
+  // 更新公告状态
+  updateNoticeStatus: (id, status) => 
+    http.patch(`/admin/notices/${id}/status`, { status })
+}
+
+// 用户端公告API
+export const userNoticeApi = {
+  // 获取已发布公告列表
+  getNoticeList: (params) => http.get('/notices', params),
+  
+  // 获取公告详情
+  getNoticeDetail: (id) => http.get(`/notices/${id}`)
+}
+
+// 标签管理相关API
+export const tagApi = {
+  // 获取标签列表
+  getTagList: (params) => http.get('/admin/tags', params),
+  
+  // 创建标签
+  createTag: (data) => http.post('/admin/tags', data),
+  
+  // 更新标签
+  updateTag: (id, data) => http.put(`/admin/tags/${id}`, data),
+  
+  // 删除标签
+  deleteTag: (id) => http.delete(`/admin/tags/${id}`),
+  
+  // 切换标签启用状态
+  toggleTagStatus: (id, enabled) => 
+    http.patch(`/admin/tags/${id}/toggle`, { enabled })
+}
+
+// 用户管理相关API
+export const userApi = {
+  // 获取用户列表
+  getUserList: (params) => http.get('/admin/users', params),
+  
+  // 获取用户详情
+  getUserDetail: (id) => http.get(`/admin/users/${id}`),
+  
+  // 更新用户
+  updateUser: (id, data) => http.put(`/admin/users/${id}`, data),
+  
+  // 更新用户状态
+  updateUserStatus: (id, status) => 
+    http.patch(`/admin/users/${id}/status`, { status }),
+  
+  // 删除用户
+  deleteUser: (id) => http.delete(`/admin/users/${id}`),
+  
+  // 批量更新用户状态
+  batchUpdateUserStatus: (ids, status) => 
+    http.patch('/admin/users/batch/status', { ids, status }),
+  
+  // 批量删除用户
+  batchDeleteUsers: (ids) => 
+    http.delete('/admin/users/batch', { ids }),
+  
+  // 导出用户
+  exportUsers: (params) => http.get('/admin/users/export', params),
+  
+  // 重置用户密码
+  resetUserPassword: (id) => 
+    http.post(`/admin/users/${id}/reset-password`)
+}
+
+// 宠物管理相关API
+export const petApi = {
+  // 获取宠物列表
+  getPetList: (params) => http.get('/admin/pets', params),
+  
+  // 获取宠物详情
+  getPetDetail: (id) => http.get(`/admin/pets/${id}`),
+  
+  // 创建宠物
+  createPet: (data) => http.post('/admin/pets', data),
+  
+  // 更新宠物
+  updatePet: (id, data) => http.put(`/admin/pets/${id}`, data),
+  
+  // 删除宠物
+  deletePet: (id) => http.delete(`/admin/pets/${id}`),
+  
+  // 更新宠物状态
+  updatePetStatus: (id, status) => 
+    http.patch(`/admin/pets/${id}/status`, { status })
+}
+
+// 机构管理相关API
+export const orgApi = {
+  // 获取机构列表
+  getOrgList: (params) => http.get('/admin/orgs', params),
+  
+  // 获取机构详情
+  getOrgDetail: (id) => http.get(`/admin/orgs/${id}`),
+  
+  // 审核机构
+  auditOrg: (id, data) => http.post(`/admin/orgs/${id}/audit`, data),
+  
+  // 更新机构状态
+  updateOrgStatus: (id, status) => 
+    http.patch(`/admin/orgs/${id}/status`, { status })
+}
+
+// 数据统计相关API
+export const statsApi = {
+  // 获取系统统计信息
+  getSystemStats: () => http.get('/admin/stats/system'),
+  
+  // 获取用户统计信息
+  getUserStats: () => http.get('/admin/stats/users'),
+  
+  // 获取宠物统计信息
+  getPetStats: () => http.get('/admin/stats/pets'),
+  
+  // 获取机构统计信息
+  getOrgStats: () => http.get('/admin/stats/orgs')
+}
+
+// 系统配置相关API
+export const configApi = {
+  // 获取系统配置
+  getSystemConfig: () => http.get('/admin/config'),
+  
+  // 更新系统配置
+  updateSystemConfig: (data) => http.put('/admin/config', data),
+  
+  // 获取上传配置
+  getUploadConfig: () => http.get('/admin/config/upload')
+}
+
+// 文件上传相关API
+export const uploadApi = {
+  // 上传文件
+  uploadFile: (formData) => http.upload('/admin/upload', formData),
+  
+  // 删除文件
+  deleteFile: (fileUrl) => http.delete('/admin/upload', { fileUrl })
+}
+
+// 日志管理相关API
+export const logApi = {
+  // 获取操作日志列表
+  getOperationLogs: (params) => http.get('/admin/logs/operation', params),
+  
+  // 获取登录日志列表
+  getLoginLogs: (params) => http.get('/admin/logs/login', params),
+  
+  // 获取错误日志列表
+  getErrorLogs: (params) => http.get('/admin/logs/error', params)
+}
+
+// 消息通知相关API
+export const messageApi = {
+  // 获取消息列表
+  getMessageList: (params) => http.get('/admin/messages', params),
+  
+  // 发送系统消息
+  sendSystemMessage: (data) => http.post('/admin/messages/system', data),
+  
+  // 批量发送消息
+  sendBatchMessage: (data) => http.post('/admin/messages/batch', data)
 }

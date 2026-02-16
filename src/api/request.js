@@ -203,6 +203,10 @@ const http = {
     return request({ method: 'DELETE', url, params, ...config })
   },
 
+  patch(url, data = {}, config = {}) {
+    return request({ method: 'PATCH', url, data, ...config })
+  },
+
   upload(url, formData, config = {}) {
     return request({
       method: 'POST',

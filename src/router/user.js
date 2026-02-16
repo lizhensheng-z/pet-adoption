@@ -72,6 +72,18 @@ export default [
     meta: { requiresAuth: true, title: '信用中心' }
   },
   {
+    path: '/notices',
+    name: 'UserNotices',
+    component: () => import('@/views/user/NoticeList.vue'),
+    meta: { title: '系统公告' }
+  },
+  {
+    path: '/notices/:id',
+    name: 'UserNoticeDetail',
+    component: () => import('@/views/user/NoticeDetail.vue'),
+    meta: { title: '公告详情' }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/user/Login.vue'),
