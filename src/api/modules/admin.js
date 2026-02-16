@@ -147,7 +147,20 @@ export const configApi = {
   updateSystemConfig: (data) => http.put('/admin/config', data),
   
   // 获取上传配置
-  getUploadConfig: () => http.get('/admin/config/upload')
+  getUploadConfig: () => http.get('/admin/config/upload'),
+  
+  // 获取配置列表（分页）
+  getConfigList: (params) => http.get('/admin/configs', params),
+  
+  // 保存配置（新增或修改）
+  saveConfig: (data) => {
+    return data.id 
+      ? http.put(`/admin/configs/${data.id}`, data) 
+      : http.post('/admin/configs', data)
+  },
+  
+  // 删除配置
+  deleteConfig: (id) => http.delete(`/admin/configs/${id}`)
 }
 
 // 文件上传相关API
