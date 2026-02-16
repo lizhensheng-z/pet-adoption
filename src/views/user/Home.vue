@@ -1,5 +1,18 @@
 <template>
-    <PageHeader title="首页" />
+    <PageHeader title="首页">
+      <template #actions>
+        <div v-if="isOrgUser || isAdminUser" class="role-actions">
+          <el-button v-if="isOrgUser" type="primary" @click="goToOrgHome">
+            <el-icon><OfficeBuilding /></el-icon>
+            机构管理
+          </el-button>
+          <el-button v-if="isAdminUser" type="danger" @click="goToAdminHome">
+            <el-icon><Setting /></el-icon>
+            管理后台
+          </el-button>
+        </div>
+      </template>
+    </PageHeader>
     
     <!-- 搜索区域 -->
     <div class="search-section">
@@ -71,15 +84,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app.js'
+import { useAuthStore } from '@/stores/auth.js'
 import PageHeader from '@/components/common/PageHeader.vue'
 import PetCard from '@/components/common/PetCard.vue'
-import { Search, ArrowRight, MoreFilled, Folder, Star, Clock, Compass } from '@element-plus/icons-vue'
+import { Search, ArrowRight, MoreFilled, Folder, Star, Clock, Compass, OfficeBuilding, Setting } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const appStore = useAppStore()
+const authStore = useAuthStore()
 
 // 响应式数据
 const searchKeyword = ref('')
@@ -88,6 +103,16 @@ const loadingMore = ref(false)
 const recommendedPets = ref([])
 const hasMore = ref(true)
 const page = ref(1)
+
+// 计算属性
+const isOrgUser = computed(() => {
+  const userRole = authStore.userRole
+  return userRole === 'ORG' || userRole === 'ROLE_ORG'
+})
+const isAdminUser = computed(() => {
+  const userRole = authStore.userRole
+  return userRole === 'ADMIN' || userRole === 'ROLE_ADMIN'
+})
 
 // 分类数据
 const categories = [
@@ -107,6 +132,14 @@ const handleSearch = () => {
       query: { keyword: searchKeyword.value.trim() }
     })
   }
+}
+
+const goToOrgHome = () => {
+  router.push('/org')
+}
+
+const goToAdminHome = () => {
+  router.push('/admin')
 }
 
 const handleCategoryClick = (category) => {
@@ -276,7 +309,21 @@ onMounted(() => {
   text-align: center;
 }
 
+.role-actions {
+  display: flex;
+  gap: 12px;
+}
+
 @media (max-width: 768px) {
+  .role-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .role-actions .el-button {
+    width: 100%;
+    justify-content: flex-start;
+  }
   .category-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: var(--spacing-sm);

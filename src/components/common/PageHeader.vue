@@ -68,25 +68,85 @@ const breadcrumbItems = computed(() => {
   const pathSegments = route.path.split('/').filter(Boolean)
   let currentPath = ''
 
-  pathSegments.forEach(segment => {
-    currentPath += '/' + segment
+  // 特殊处理机构相关路由
+  if (route.path.startsWith('/org/')) {
+    // 机构相关页面，添加机构首页
+    items.push({
+      path: '/org',
+      title: '机构首页'
+    })
     
-    // 跳过动态路由参数
-    if (segment.startsWith(':') || /^\d+$/.test(segment)) {
-      return
-    }
+    // 处理子路径
+    for (let i = 1; i < pathSegments.length; i++) {
+      currentPath += '/' + pathSegments[i]
+      const fullPath = '/org' + currentPath
+      
+      // 跳过动态路由参数
+      if (pathSegments[i].startsWith(':') || /^\d+$/.test(pathSegments[i])) {
+        continue
+      }
 
-    // 查找对应的路由配置
-    const matchedRoute = router.resolve(currentPath).matched
-    const routeRecord = matchedRoute[matchedRoute.length - 1]
-    
-    if (routeRecord && routeRecord.meta?.title) {
-      items.push({
-        path: currentPath,
-        title: routeRecord.meta.title
-      })
+      // 查找对应的路由配置
+      const matchedRoute = router.resolve(fullPath).matched
+      const routeRecord = matchedRoute[matchedRoute.length - 1]
+      
+      if (routeRecord && routeRecord.meta?.title && routeRecord.meta.title !== '机构首页') {
+        items.push({
+          path: fullPath,
+          title: routeRecord.meta.title
+        })
+      }
     }
-  })
+  } else if (route.path.startsWith('/admin/')) {
+    // 管理员相关页面，添加管理首页
+    items.push({
+      path: '/admin',
+      title: '管理首页'
+    })
+    
+    // 处理子路径
+    for (let i = 1; i < pathSegments.length; i++) {
+      currentPath += '/' + pathSegments[i]
+      const fullPath = '/admin' + currentPath
+      
+      // 跳过动态路由参数
+      if (pathSegments[i].startsWith(':') || /^\d+$/.test(pathSegments[i])) {
+        continue
+      }
+
+      // 查找对应的路由配置
+      const matchedRoute = router.resolve(fullPath).matched
+      const routeRecord = matchedRoute[matchedRoute.length - 1]
+      
+      if (routeRecord && routeRecord.meta?.title && routeRecord.meta.title !== '管理首页') {
+        items.push({
+          path: fullPath,
+          title: routeRecord.meta.title
+        })
+      }
+    }
+  } else {
+    // 普通用户路由，保持原有逻辑
+    pathSegments.forEach(segment => {
+      currentPath += '/' + segment
+      
+      // 跳过动态路由参数
+      if (segment.startsWith(':') || /^\d+$/.test(segment)) {
+        return
+      }
+
+      // 查找对应的路由配置
+      const matchedRoute = router.resolve(currentPath).matched
+      const routeRecord = matchedRoute[matchedRoute.length - 1]
+      
+      if (routeRecord && routeRecord.meta?.title) {
+        items.push({
+          path: currentPath,
+          title: routeRecord.meta.title
+        })
+      }
+    })
+  }
 
   // 如果面包屑最后一项与页面标题相同，则移除重复
   if (items.length > 0 && props.title === items[items.length - 1].title) {

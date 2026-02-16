@@ -27,9 +27,31 @@ export const adminAPI = {
     return http.get(`/admin/users/${id}`)
   },
 
+  // 更新用户信息
+  updateUser(id, data) {
+    return http.put(`/admin/users/${id}`, data)
+  },
+
   // 更新用户状态
   updateUserStatus(id, status) {
     return http.put(`/admin/users/${id}/status`, { status })
+  },
+
+  // 批量更新用户状态
+  batchUpdateUserStatus(userIds, status) {
+    return http.put('/admin/users/batch-status', { userIds, status })
+  },
+
+  // 批量删除用户
+  batchDeleteUsers(userIds) {
+    return http.delete('/admin/users/batch', { userIds })
+  },
+
+  // 导出用户数据
+  exportUsers(params) {
+    return http.get('/admin/users/export', params, {
+      responseType: 'blob'
+    })
   },
 
   // 获取标签管理列表
@@ -86,4 +108,5 @@ export const adminAPI = {
   getAuditLogs(params) {
     return http.get('/admin/audit-logs', params)
   }
+  
 }

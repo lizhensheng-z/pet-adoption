@@ -3,7 +3,7 @@
     <div class="header-container">
       <!-- Logo区域 -->
       <div class="logo-section">
-        <router-link to="/" class="logo-link">
+        <router-link to="/home" class="logo-link">
           <span class="logo-text">{{ systemConfig.siteName }}</span>
         </router-link>
       </div>
@@ -83,6 +83,14 @@
                   <el-icon><Document /></el-icon>
                   我的申请
                 </el-dropdown-item>
+                <el-dropdown-item v-if="isOrgUser" command="orgHome" divided>
+                  <el-icon><OfficeBuilding /></el-icon>
+                  机构首页
+                </el-dropdown-item>
+                <el-dropdown-item v-if="isAdminUser" command="adminHome" divided>
+                  <el-icon><Setting /></el-icon>
+                  管理后台
+                </el-dropdown-item>
                 <el-dropdown-item divided command="logout">
                   <el-icon><SwitchButton /></el-icon>
                   退出登录
@@ -135,7 +143,8 @@ import { useAppStore } from '@/stores/app.js'
 import CitySelector from '@/components/common/CitySelector.vue'
 import {
   Search, Location, ArrowDown, Bell, User, Star,
-  Document, SwitchButton, Menu, Loading, LocationInformation
+  Document, SwitchButton, Menu, Loading, LocationInformation,
+  OfficeBuilding, Setting
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -157,6 +166,14 @@ const userName = computed(() => authStore.user?.nickname || authStore.user?.user
 const userInitial = computed(() => userName.value?.charAt(0)?.toUpperCase() || 'U')
 const currentCity = computed(() => appStore.currentCity)
 const systemConfig = computed(() => appStore.systemConfig)
+const isOrgUser = computed(() => {
+  const userRole = authStore.userRole
+  return userRole === 'ORG' || userRole === 'ROLE_ORG'
+})
+const isAdminUser = computed(() => {
+  const userRole = authStore.userRole
+  return userRole === 'ADMIN' || userRole === 'ROLE_ADMIN'
+})
 
 // 事件处理
 const handleSearch = () => {
@@ -208,6 +225,12 @@ const handleUserCommand = (command) => {
       break
     case 'applications':
       router.push('/applications')
+      break
+    case 'orgHome':
+      router.push('/org')
+      break
+    case 'adminHome':
+      router.push('/admin')
       break
     case 'logout':
       authStore.logout()

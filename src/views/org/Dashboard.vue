@@ -2,6 +2,10 @@
   <div class="org-dashboard">
     <PageHeader title="机构首页">
       <template #actions>
+        <el-button @click="goToHome">
+          <el-icon><House /></el-icon>
+          返回首页
+        </el-button>
         <el-button type="primary" @click="handleCreatePet">
           <el-icon><Plus /></el-icon>
           发布宠物
@@ -97,7 +101,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
 import { orgAPI } from '@/api/modules/org.js'
 import { ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, House } from '@element-plus/icons-vue'
 
 // 组件导入
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -390,6 +394,11 @@ const getMockApplications = () => [
 // 创建宠物
 const handleCreatePet = () => {
   router.push('/org/pet/create')
+}
+
+// 返回普通用户首页
+const goToHome = () => {
+  router.push('/home')
 }
 
 // 快捷操作处理
