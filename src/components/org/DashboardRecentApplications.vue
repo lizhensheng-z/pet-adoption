@@ -183,17 +183,17 @@ const formatTime = (time) => {
 
 // 查看全部
 const handleViewAll = () => {
-  router.push('/org/applications')
+  router.push('/org/adoptions')
 }
 
 // 点击申请项
 const handleApplicationClick = (app) => {
-  router.push(`/org/applications/${app.id}`)
+  router.push(`/org/adoptions/${app.id}`)
 }
 
 // 处理申请
 const handleProcess = (app) => {
-  router.push(`/org/applications/${app.id}`)
+  router.push(`/org/adoptions/${app.id}`)
 }
 </script>
 

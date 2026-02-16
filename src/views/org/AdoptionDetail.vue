@@ -1,4 +1,12 @@
 <template>
+      <PageHeader title="申请管理">
+      <template #actions>
+        <el-button type="primary" @click="handleRefresh">
+          <el-icon><Refresh /></el-icon>
+          刷新
+        </el-button>
+      </template>
+    </PageHeader>
   <div class="org-adoption-detail">
     <div class="page-header">
       <el-button type="text" @click="goBack">
@@ -195,6 +203,34 @@
                     />
                   </el-form-item>
 
+                  <el-form-item 
+                    label="面谈时间" 
+                    prop="interviewTime"
+                    v-if="auditForm.action === 'INTERVIEW'"
+                  >
+                    <el-date-picker
+                      v-model="auditForm.interviewTime"
+                      type="datetime"
+                      placeholder="选择面谈时间"
+                      format="YYYY-MM-DD HH:mm"
+                      value-format="YYYY-MM-DDTHH:mm:ss"
+                      :disabled-date="disabledPastDate"
+                    />
+                  </el-form-item>
+
+                  <el-form-item 
+                    label="面谈地点" 
+                    prop="interviewLocation"
+                    v-if="auditForm.action === 'INTERVIEW'"
+                  >
+                    <el-input
+                      v-model="auditForm.interviewLocation"
+                      placeholder="请输入面谈地点（可线上）"
+                      maxlength="100"
+                      show-word-limit
+                    />
+                  </el-form-item>
+
                   <el-form-item>
                     <el-button
                       type="primary"
@@ -251,7 +287,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, Picture, Phone } from '@element-plus/icons-vue'
 import {
   getOrgApplicationDetail,
-  auditApplication,
+  updateApplicationStatus,
   getAuditRecords,
   OrgApplicationStatusMap,
   OrgApplicationStatusColor
@@ -267,7 +303,9 @@ const auditRecords = ref([])
 
 const auditForm = reactive({
   action: '',
-  note: ''
+  note: '',
+  interviewTime: '',
+  interviewLocation: ''
 })
 
 const auditRules = {
@@ -277,6 +315,13 @@ const auditRules = {
   note: [
     { required: true, message: '请输入审核备注', trigger: 'blur' },
     { min: 5, max: 500, message: '备注长度在 5-500 个字符之间', trigger: 'blur' }
+  ],
+  interviewTime: [
+    { required: false, message: '请选择面谈时间', trigger: 'change' }
+  ],
+  interviewLocation: [
+    { required: false, message: '请输入面谈地点', trigger: 'blur' },
+    { min: 2, max: 100, message: '地点长度在 2-100 个字符之间', trigger: 'blur' }
   ]
 }
 
@@ -313,6 +358,11 @@ const availableActions = computed(() => {
         { value: 'REJECTED', label: '拒绝申请' }
       )
       break
+    // 终态不显示操作
+    case 'APPROVED':
+    case 'REJECTED':
+    case 'CANCELLED':
+      break
   }
   
   return actions
@@ -328,7 +378,8 @@ const getCurrentStep = computed(() => {
     'INTERVIEW': 3,
     'HOME_VISIT': 4,
     'APPROVED': 5,
-    'REJECTED': 5
+    'REJECTED': 5,
+    'CANCELLED': 1
   }
   
   return stepMap[status] || 0
@@ -361,6 +412,16 @@ const submitAudit = async () => {
   if (!auditFormRef.value) return
   
   try {
+    // 动态调整验证规则
+    if (auditForm.action === 'INTERVIEW') {
+      auditRules.interviewTime[0].required = true
+      auditRules.interviewLocation[0].required = true
+    } else {
+      auditRules.interviewTime[0].required = false
+      auditRules.interviewLocation[0].required = false
+    }
+    
+    // 等待验证完成
     await auditFormRef.value.validate()
     
     await ElMessageBox.confirm(
@@ -375,10 +436,23 @@ const submitAudit = async () => {
     
     submitting.value = true
     
-    await auditApplication(route.params.id, {
-      action: auditForm.action,
-      note: auditForm.note
-    })
+    const requestData = {
+      toStatus: auditForm.action,
+      remark: auditForm.note
+    }
+    
+    // 如果是拒绝操作，需要添加拒绝原因
+    if (auditForm.action === 'REJECTED') {
+      requestData.rejectReason = auditForm.note
+    }
+    
+    // 如果是安排面谈，添加面谈时间和地点
+    if (auditForm.action === 'INTERVIEW') {
+      requestData.interviewTime = auditForm.interviewTime
+      requestData.interviewLocation = auditForm.interviewLocation
+    }
+    
+    await updateApplicationStatus(route.params.id, requestData)
     
     ElMessage.success('审核操作成功')
     await loadApplicationDetail()
@@ -421,7 +495,13 @@ const getStepDescription = (step) => {
 const resetForm = () => {
   auditForm.action = ''
   auditForm.note = ''
+  auditForm.interviewTime = ''
+  auditForm.interviewLocation = ''
   auditFormRef.value?.resetFields()
+}
+
+const disabledPastDate = (time) => {
+  return time.getTime() < Date.now() - 8.64e7
 }
 
 const goBack = () => {

@@ -213,17 +213,17 @@ const formatAge = (ageMonth) => {
 
 // 查看全部
 const handleViewAll = () => {
-  router.push('/org/pets')
+  router.push('/org/pet')
 }
 
 // 创建宠物
 const handleCreatePet = () => {
-  router.push('/org/pets/create')
+  router.push('/org/pet/create')
 }
 
 // 点击宠物卡片
 const handlePetClick = (pet) => {
-  router.push(`/org/pets/${pet.id}`)
+  router.push(`/org/pet/detail/${pet.id}`)
 }
 </script>
 

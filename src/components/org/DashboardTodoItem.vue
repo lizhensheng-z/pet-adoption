@@ -206,14 +206,14 @@ const handleClick = () => {
   // 默认跳转逻辑
   switch (props.todo.type) {
     case 'application':
-      router.push(`/org/applications/${props.todo.id}`)
+      router.push(`/org/adoptions/${props.todo.id}`)
       break
     case 'followup':
       router.push('/org/followup')
       break
     case 'audit':
       if (props.todo.petId) {
-        router.push(`/org/pets/${props.todo.petId}`)
+        router.push(`/org/pet/detail/${props.todo.petId}`)
       }
       break
   }

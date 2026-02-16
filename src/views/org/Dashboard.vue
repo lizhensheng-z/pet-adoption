@@ -1,6 +1,6 @@
 <template>
   <div class="org-dashboard">
-    <PageHeader title="机构管理首页">
+    <PageHeader title="机构首页">
       <template #actions>
         <el-button type="primary" @click="handleCreatePet">
           <el-icon><Plus /></el-icon>
@@ -19,7 +19,7 @@
               :value="stats.totalPets"
               icon="Files"
               color="#67C23A"
-              @click="router.push('/org/pets')"
+              @click="router.push('/org/pet')"
             />
           </el-col>
 
@@ -29,7 +29,7 @@
               :value="stats.pendingApplications"
               icon="Document"
               color="#E6A23C"
-              @click="router.push('/org/applications')"
+              @click="router.push('/org/adoptions')"
             />
           </el-col>
 
@@ -389,17 +389,17 @@ const getMockApplications = () => [
 
 // 创建宠物
 const handleCreatePet = () => {
-  router.push('/org/pets/create')
+  router.push('/org/pet/create')
 }
 
 // 快捷操作处理
 const handleQuickAction = (action) => {
   switch (action) {
     case 'pets':
-      router.push('/org/pets')
+      router.push('/org/pet')
       break
     case 'applications':
-      router.push('/org/applications')
+      router.push('/org/adoptions')
       break
     case 'followup':
       router.push('/org/followup')

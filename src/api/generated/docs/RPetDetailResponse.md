@@ -1,0 +1,26 @@
+# RPetDetailResponse
+
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**code** | **number** |  | [optional] [default to undefined]
+**message** | **string** |  | [optional] [default to undefined]
+**data** | [**PetDetailResponse**](PetDetailResponse.md) |  | [optional] [default to undefined]
+**timestamp** | **string** |  | [optional] [default to undefined]
+
+## Example
+
+```typescript
+import { RPetDetailResponse } from './api';
+
+const instance: RPetDetailResponse = {
+    code,
+    message,
+    data,
+    timestamp,
+};
+```
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

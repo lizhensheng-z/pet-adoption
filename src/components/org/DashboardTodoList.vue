@@ -153,7 +153,7 @@ const handleFilterChange = (filter) => {
 
 // 查看全部
 const handleViewAll = () => {
-  router.push('/org/applications')
+  router.push('/org/adoptions')
 }
 
 // 点击待办事项

@@ -34,7 +34,7 @@ export function getOrgApplicationDetail(applicationId) {
  * 机构更新申请状态
  * @param {number|string} applicationId - 申请ID
  * @param {Object} data - 状态更新数据
- * @param {string} data.status - 新状态（SUBMITTED/UNDER_REVIEW/INTERVIEW/HOME_VISIT/APPROVED/REJECTED/CANCELLED）
+ * @param {string} data.toStatus - 新状态（SUBMITTED/UNDER_REVIEW/INTERVIEW/HOME_VISIT/APPROVED/REJECTED/CANCELLED）
  * @param {string} [data.remark] - 机构备注或说明
  * @param {string} [data.rejectReason] - 拒绝原因（仅在拒绝时需要）
  * @returns {Promise} 返回Promise对象
@@ -42,6 +42,22 @@ export function getOrgApplicationDetail(applicationId) {
 export function updateApplicationStatus(applicationId, data) {
   return http.post(`/org/adoption/applications/${applicationId}/status`, data)
 }
+
+/**
+ * 获取申请审核记录
+ * @param {number|string} applicationId - 申请ID
+ * @returns {Promise} 返回Promise对象
+ */
+export function getAuditRecords(applicationId) {
+  return http.get(`/org/adoption/applications/${applicationId}/logs`)
+}
+
+/**
+ * 获取申请流程日志（别名函数，保持兼容性）
+ * @param {number|string} applicationId - 申请ID
+ * @returns {Promise} 返回Promise对象
+ */
+export const getOrgApplicationLogs = getAuditRecords
 
 /**
  * 申请状态枚举

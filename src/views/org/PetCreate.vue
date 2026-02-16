@@ -4,7 +4,12 @@
     <div class="bg-glow-1"></div>
     <div class="bg-glow-2"></div>
 
-    <PageHeader title="发布新成员" class="modern-header">
+    <PageHeader title="发布新成员" class="modern-header" :custom-breadcrumb="[
+      { path: '/', title: '首页' },
+      { path: '/org', title: '机构首页' },
+      { path: '/org/pet', title: '宠物管理' },
+      { path: null, title: '发布新成员' }
+    ]">
       <template #actions>
         <div class="header-action-group">
           <el-button class="glass-btn" @click="handleSaveDraft" :loading="submitting" :disabled="!canSave">

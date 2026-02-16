@@ -1,9 +1,17 @@
 <template>
   <div class="org-adoptions">
-    <div class="page-header">
-      <h2>领养申请管理</h2>
-      <p class="page-desc">管理您发布宠物的所有领养申请</p>
-    </div>
+    <PageHeader title="领养申请管理" :custom-breadcrumb="[
+      { path: '/', title: '首页' },
+      { path: '/org', title: '机构首页' },
+      { path: null, title: '领养申请管理' }
+    ]">
+      <template #actions>
+        <el-button type="primary" @click="handleRefresh">
+          <el-icon><Refresh /></el-icon>
+          刷新
+        </el-button>
+      </template>
+    </PageHeader>
 
     <!-- 筛选和搜索 -->
     <div class="filter-bar">
@@ -123,7 +131,7 @@
                 </div>
                 <p class="applicant">申请人：{{ application.userName }}</p>
                 <p class="submit-time">提交时间：{{ formatTime(application.submitTime) }}</p>
-                <p class="latest-flow">{{ application.latestFlow || '暂无流程' }}</p>
+                <p class="latest-flow">{{ application.statusDesc || '暂无流程' }}</p>
               </div>
             </div>
 
@@ -179,8 +187,10 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Picture } from '@element-plus/icons-vue'
+import { Search, Picture, Refresh } from '@element-plus/icons-vue'
 import { getOrgApplications, OrgApplicationStatusMap, OrgApplicationStatusColor } from '@/api/modules/org-adoption'
+import petApi from '@/api/modules/pet'
+import PageHeader from '@/components/common/PageHeader.vue'
 
 const router = useRouter()
 
@@ -227,7 +237,7 @@ const loadApplications = async () => {
     if (searchKeyword.value) params.keyword = searchKeyword.value
 
     const { data } = await getOrgApplications(params)
-    applications.value = data.list || []
+    applications.value = data.records || []
     total.value = data.total || 0
     
     // 更新统计数据
@@ -273,6 +283,11 @@ const handleCurrentChange = (val) => {
   loadApplications()
 }
 
+const handleRefresh = () => {
+  loadApplications()
+  loadPetOptions()
+}
+
 const viewApplication = (id) => {
   router.push(`/org/adoptions/${id}`)
 }
@@ -292,8 +307,31 @@ const formatTime = (time) => {
   })
 }
 
+const loadPetOptions = async () => {
+  try {
+    const { data } = await petApi.getOrgPetList({
+      pageNo: 1,
+      pageSize: 100, // 获取所有宠物
+      status: 'PUBLISHED' // 只获取已发布的宠物
+    })
+    
+    if (data && data.list) {
+      // 根据宠物名称去重，使用Map保持顺序
+      const uniquePets = Array.from(
+        new Map(data.list.map(pet => [pet.name, { id: pet.id, name: pet.name }])).values()
+      )
+      
+      petOptions.value = uniquePets
+    }
+  } catch (error) {
+    console.error('获取宠物列表失败:', error)
+    ElMessage.error('获取宠物列表失败')
+  }
+}
+
 onMounted(() => {
   loadApplications()
+  loadPetOptions()
 })
 </script>
 
