@@ -49,7 +49,7 @@ export const orgAPI = {
 
   // 获取标签列表
   getTagList(params = {}) {
-    return http.get('/tags', params)
+    return http.get('/admin/tags', params)
   },
 
   // 获取申请管理列表

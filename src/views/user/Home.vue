@@ -107,10 +107,12 @@ const page = ref(1)
 // 计算属性
 const isOrgUser = computed(() => {
   const userRole = authStore.userRole
+  console.log('当前用户角色:', userRole)
   return userRole === 'ORG' || userRole === 'ROLE_ORG'
 })
 const isAdminUser = computed(() => {
   const userRole = authStore.userRole
+  console.log('当前用户是否为管理员:', userRole)
   return userRole === 'ADMIN' || userRole === 'ROLE_ADMIN'
 })
 
@@ -216,6 +218,14 @@ const loadMore = () => {
 // 生命周期
 onMounted(() => {
   loadRecommendedPets()
+  
+  // 调试信息
+  console.log('=== 首页调试信息 ===')
+  console.log('当前用户:', authStore.user)
+  console.log('用户角色:', authStore.userRole)
+  console.log('是否为管理员:', authStore.isAdmin)
+  console.log('权限列表:', authStore.permissions)
+  console.log('===================')
 })
 </script>
 

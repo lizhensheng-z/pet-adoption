@@ -7,10 +7,15 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useAppStore } from '@/stores/app.js'
+import { useAuthStore } from '@/stores/auth.js'
 
 const appStore = useAppStore()
+const authStore = useAuthStore()
 
 onMounted(() => {
+  // 初始化用户信息
+  authStore.initUserInfo()
+  
   // 初始化应用设置
   appStore.initAppSettings()
   

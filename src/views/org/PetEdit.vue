@@ -103,7 +103,8 @@
               <el-form-item label="封面图片" prop="coverUrl">
                 <el-upload
                   class="avatar-uploader"
-                  action="/api/upload/image"
+                  action="#"
+                  :http-request="uploadCoverImage"
                   :show-file-list="false"
                   :on-success="handleCoverSuccess"
                   :before-upload="beforeImageUpload"
@@ -249,9 +250,10 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Back, Check, Plus } from '@element-plus/icons-vue'
-import AppLayout from '@/components/layout/AppLayout.vue'
+
 import PageHeader from '@/components/common/PageHeader.vue'
-import petApi from '@/api/modules/pet.js'
+import {petAPI} from '@/api/modules/pet.js'
+import { uploadPetPhoto } from '@/api/modules/upload.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -314,7 +316,7 @@ const getPetDetail = async () => {
   
   loading.value = true
   try {
-    const { data } = await petApi.getPetDetail(Number(route.params.id))
+    const { data } = await petAPI.getPetDetail(Number(route.params.id))
     Object.assign(petForm, data)
   } catch (error) {
     ElMessage.error('获取宠物详情失败')
@@ -339,10 +341,10 @@ const handleSubmit = async () => {
     submitLoading.value = true
     try {
       if (isEdit.value) {
-        await petApi.updatePet(Number(route.params.id), petForm)
+        await petAPI.updatePet(Number(route.params.id), petForm)
         ElMessage.success('更新成功')
       } else {
-        await petApi.createPet(petForm)
+        await petAPI.createPet(petForm)
         ElMessage.success('创建成功')
       }
       router.push('/org/pet')
@@ -357,7 +359,7 @@ const handleSubmit = async () => {
 
 // 封面图片上传成功
 const handleCoverSuccess = (response) => {
-  petForm.coverUrl = response.data.url
+  petForm.coverUrl = response.url || response.data?.url
 }
 
 // 图片上传前验证
@@ -374,6 +376,19 @@ const beforeImageUpload = (file) => {
     return false
   }
   return true
+}
+
+// 封面上传
+const uploadCoverImage = async (options) => {
+  const { file, onSuccess, onError } = options
+  try {
+    const response = await uploadPetPhoto(file)
+    onSuccess(response.data)
+  } catch (error) {
+    console.error('封面上传失败:', error)
+    ElMessage.error('封面上传失败，请重试')
+    onError(error)
+  }
 }
 
 // 初始化

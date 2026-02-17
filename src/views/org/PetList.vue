@@ -155,9 +155,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search, Refresh, Picture } from '@element-plus/icons-vue'
-import AppLayout from '@/components/layout/AppLayout.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
-import petApi from '@/api/modules/pet.js'
+import {petAPI} from '@/api/modules/pet.js'
 
 const router = useRouter()
 
@@ -188,7 +187,7 @@ const getPetList = async () => {
       pageSize: pagination.pageSize,
       ...searchForm
     }
-    const { data } = await petApi.getOrgPetList(params)
+    const { data } = await petAPI.getOrgPetList(params)
     petList.value = data.list || []
     pagination.total = data.total || 0
   } catch (error) {
@@ -253,7 +252,7 @@ const handleDelete = async (row) => {
       }
     )
     
-    await petApi.deletePet(row.id)
+    await petAPI.deletePet(row.id)
     ElMessage.success('删除成功')
     getPetList()
   } catch (error) {

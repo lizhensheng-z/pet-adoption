@@ -8,7 +8,8 @@ import {
   getRefreshToken,
   removeToken, 
   isAccessTokenExpired,
-  hasRefreshToken 
+  hasRefreshToken,
+  getUserRoleFromToken 
 } from '@/utils/auth.js'
 
 export const useAuthStore = defineStore('auth', {
@@ -23,9 +24,23 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isLoggedIn: (state) => !!state.token && !isAccessTokenExpired(),
     hasPermission: (state) => (permission) => {
+      // 管理员拥有所有权限
+      if (state.user?.role === 'ADMIN' || state.user?.role === 'ROLE_ADMIN') {
+        return true
+      }
       return state.permissions.includes(permission) || state.permissions.includes('*')
     },
-    userRole: (state) => state.user?.role || 'USER',
+    userRole: (state) => {
+      // 如果用户未加载，尝试从token获取角色
+      if (!state.user && state.token) {
+        const tokenRole = getUserRoleFromToken()
+        console.log('从token获取角色:', tokenRole)
+        return tokenRole || 'USER'
+      }
+      const role = state.user?.role || 'USER'
+      console.log('AuthStore userRole:', role, 'User:', state.user)
+      return role
+    },
     isAdmin: (state) => state.user?.role === 'ADMIN',
     isOrg: (state) => state.user?.role === 'ORG',
     isUser: (state) => state.user?.role === 'USER'
@@ -71,6 +86,11 @@ export const useAuthStore = defineStore('auth', {
 
         // 转换权限格式：将 ROLE_ORG, ROLE_ADMIN 等转换为具体的权限列表
         this.permissions = this.convertPermissions(permissions || [])
+        
+        // 确保管理员拥有所有权限
+        if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
+          this.permissions = ['*']
+        }
 
         console.log('登录成功，用户信息:', this.user)
         console.log('当前角色:', role)
@@ -237,6 +257,7 @@ const { userId, username, role, avatar, phone, email, status, createTime, permis
 
     // 检查权限
     checkPermission(permission) {
+      console.log('权限检查:', { permission, userRole: this.userRole, permissions: this.permissions, isAdmin: this.isAdmin })
       return this.hasPermission(permission)
     },
 
@@ -244,10 +265,16 @@ const { userId, username, role, avatar, phone, email, status, createTime, permis
     async initUserInfo() {
       if (this.token && !this.user) {
         try {
+          console.log('初始化用户信息，token存在但user为null')
           await this.getCurrentUser()
+          console.log('用户信息初始化完成:', this.user)
         } catch (error) {
           console.error('初始化用户信息失败:', error)
         }
+      } else if (this.token && this.user) {
+        console.log('用户信息已存在:', this.user)
+      } else if (!this.token) {
+        console.log('无token，用户未登录')
       }
     },
 

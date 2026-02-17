@@ -29,12 +29,12 @@ export default [
     component: () => import('@/views/admin/Users.vue'),
     meta: { requiresAuth: true, permission: 'admin:user:list', title: '用户管理' }
   },
-  // {
-  //   path: '/admin/users/:id',
-  //   name: 'AdminUserDetail',
-  //   component: () => import('@/views/admin/UserDetail.vue'),
-  //   meta: { requiresAuth: true, permission: 'admin:user:view', title: '用户详情' }
-  // },
+  {
+    path: '/admin/users/:id',
+    name: 'AdminUserDetail',
+    component: () => import('@/views/admin/UserDetail.vue'),
+    meta: { requiresAuth: true, permission: 'admin:user:view', title: '用户详情' }
+  },
   {
     path: '/admin/tags',
     name: 'AdminTags',

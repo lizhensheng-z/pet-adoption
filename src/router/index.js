@@ -3,6 +3,7 @@ import userRoutes from './user.js'
 import orgRoutes from './org.js'
 import adminRoutes from './admin.js'
 import { getToken, getUserRoleFromToken } from '@/utils/auth.js'
+import { useAuthStore } from '@/stores/auth.js'
 import AppLayout from '@/components/layout/AppLayout.vue' // 确保路径正确
 
 const routes = [
@@ -69,7 +70,16 @@ router.beforeEach(async (to, from, next) => {
     return
   }
 
-// 3. 权限检查
+// 3. 确保AuthStore用户状态同步
+  if (token) {
+    const authStore = useAuthStore()
+    if (!authStore.user) {
+      console.log('同步AuthStore用户状态...')
+      await authStore.initUserInfo()
+    }
+  }
+
+// 4. 权限检查
   if (to.meta.permission && token) {
     const userRole = getUserRoleFromToken()
     const requiredPermission = to.meta.permission
@@ -78,12 +88,19 @@ router.beforeEach(async (to, from, next) => {
     console.log('目标路径:', to.path)
     console.log('所需权限:', requiredPermission)
     console.log('从token获取的角色:', userRole)
-    console.log('完整token:', token)
 
     // 检查用户角色和权限
-    const hasPermission = checkUserPermission(userRole, requiredPermission)
+    let hasPermission = false
+    
+    // 管理员拥有所有权限
+    if (userRole === 'ADMIN' || userRole === 'ROLE_ADMIN') {
+      hasPermission = true
+      console.log('管理员权限通过')
+    } else {
+      hasPermission = checkUserPermission(userRole, requiredPermission)
+      console.log('权限检查结果:', hasPermission)
+    }
 
-    console.log('权限检查结果:', hasPermission)
     console.log('===================')
 
     if (!hasPermission) {
@@ -100,7 +117,7 @@ router.beforeEach(async (to, from, next) => {
 function checkUserPermission(userRole, requiredPermission) {
   if (!userRole || !requiredPermission) return false
   
-  // 管理员拥有所有权限
+  // 管理员拥有所有权限，包括用户端和管理端
   if (userRole === 'ADMIN' || userRole === 'ROLE_ADMIN') return true
   
   // 机构用户权限检查

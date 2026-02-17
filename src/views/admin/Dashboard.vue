@@ -1,594 +1,347 @@
 <template>
   <div class="admin-dashboard">
-    <PageHeader title="管理控制台" />
+    <!-- 装饰背景 -->
+    <div class="dashboard-bg"></div>
 
-    <!-- 数据概览 -->
-    <div class="overview-section">
-      <div class="page-container">
-        <el-row :gutter="24">
-          <el-col :xs="12" :sm="6">
-            <el-card class="overview-card">
-              <div class="overview-content">
-                <div class="overview-icon users">
-                  <el-icon size="24"><User /></el-icon>
-                </div>
-                <div class="overview-info">
-                  <div class="overview-number">{{ stats.totalUsers }}</div>
-                  <div class="overview-label">总用户数</div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-          
-          <el-col :xs="12" :sm="6">
-            <el-card class="overview-card">
-              <div class="overview-content">
-                <div class="overview-icon orgs">
-                  <el-icon size="24"><OfficeBuilding /></el-icon>
-                </div>
-                <div class="overview-info">
-                  <div class="overview-number">{{ stats.totalOrgs }}</div>
-                  <div class="overview-label">机构数量</div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-          
-          <el-col :xs="12" :sm="6">
-            <el-card class="overview-card">
-              <div class="overview-content">
-                <div class="overview-icon pets">
-                  <el-icon size="24"><Files /></el-icon>
-                </div>
-                <div class="overview-info">
-                  <div class="overview-number">{{ stats.totalPets }}</div>
-                  <div class="overview-label">宠物总数</div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-          
-          <el-col :xs="12" :sm="6">
-            <el-card class="overview-card">
-              <div class="overview-content">
-                <div class="overview-icon adoptions">
-                  <el-icon size="24"><Select /></el-icon>
-                </div>
-                <div class="overview-info">
-                  <div class="overview-number">{{ stats.totalAdoptions }}</div>
-                  <div class="overview-label">成功领养</div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-        </el-row>
-      </div>
-    </div>
+    <PageHeader title="系统管理概览">
+      <template #actions>
+        <el-button type="primary" plain @click="loadDashboardData" :loading="loading" round>
+          <el-icon><Refresh /></el-icon> 刷新看板
+        </el-button>
+        <el-button type="primary" @click="goToUserHome" round>
+          <el-icon><House /></el-icon> 返回门户
+        </el-button>
+      </template>
+    </PageHeader>
 
-    <!-- 数据图表 -->
-    <div class="charts-section">
-      <div class="page-container">
-        <el-row :gutter="24">
-          <el-col :xs="24" :md="12">
-            <el-card>
-              <template #header>
-                <h3>用户增长趋势</h3>
-              </template>
-              <div class="chart-placeholder">
-                <el-empty description="图表组件待集成" />
-              </div>
-            </el-card>
-          </el-col>
-          
-          <el-col :xs="24" :md="12">
-            <el-card>
-              <template #header>
-                <h3>领养申请统计</h3>
-              </template>
-              <div class="chart-placeholder">
-                <el-empty description="图表组件待集成" />
-              </div>
-            </el-card>
-          </el-col>
-        </el-row>
-      </div>
-    </div>
+    <div class="dashboard-content">
+      <!-- 1. 核心指标卡片 (更加扁平现代) -->
+      <section class="stat-container">
+        <div class="glass-stat-card" v-for="item in statConfigs" :key="item.label">
+          <div class="stat-icon" :style="{ background: item.color }">
+            <el-icon><component :is="item.icon" /></el-icon>
+          </div>
+          <div class="stat-main">
+            <div class="stat-value">{{ item.value }}</div>
+            <div class="stat-label">{{ item.label }}</div>
+          </div>
+          <div class="stat-trend">
+            <span class="up">+{{ item.trend }}%</span>
+            <span class="trend-label">较上周</span>
+          </div>
+        </div>
+      </section>
 
-    <!-- 待处理事项 -->
-    <div class="pending-section">
-      <div class="page-container">
-        <el-card>
-          <template #header>
-            <div class="card-header">
-              <h3>待处理事项</h3>
-              <el-button text @click="router.push('/admin/pet-audits')">
-                查看全部
-              </el-button>
+      <!-- 2. 图表分析区 -->
+      <el-row :gutter="20" class="chart-row">
+        <el-col :xs="24" :lg="16">
+          <el-card class="modern-card">
+            <template #header>
+              <div class="card-title">
+                <el-icon><TrendCharts /></el-icon> 平台活跃度趋势
+              </div>
+            </template>
+            <div class="chart-box">
+              <v-chart class="chart" :option="growthChartOption" autoresize />
             </div>
-          </template>
-          
-          <el-tabs v-model="activeTab">
-            <el-tab-pane label="待审核宠物" name="pets">
-              <div v-if="pendingPets.length === 0" class="empty-state">
-                <el-empty description="暂无待审核宠物" />
+          </el-card>
+        </el-col>
+        <el-col :xs="24" :lg="8">
+          <el-card class="modern-card">
+            <template #header>
+              <div class="card-title">
+                <el-icon><PieChart /></el-icon> 领养分配占比
               </div>
-              <div v-else class="pending-list">
-                <div 
-                  v-for="pet in pendingPets" 
-                  :key="pet.id"
-                  class="pending-item"
-                >
-                  <el-image
-                    :src="pet.image"
-                    :alt="pet.name"
-                    class="pending-image"
-                    fit="cover"
-                  />
-                  <div class="pending-info">
-                    <div class="pending-title">{{ pet.name }}</div>
-                    <div class="pending-meta">
-                      <el-tag size="small">{{ pet.breed }}</el-tag>
-                      <span class="pending-time">{{ formatTime(pet.createdAt) }}</span>
-                    </div>
-                  </div>
-                  <div class="pending-actions">
-                    <el-button 
-                      type="success" 
-                      size="small"
-                      @click="handleAuditPet(pet.id, 'approve')"
-                    >
-                      通过
-                    </el-button>
-                    <el-button 
-                      type="danger" 
-                      size="small"
-                      @click="handleAuditPet(pet.id, 'reject')"
-                    >
-                      拒绝
-                    </el-button>
-                  </div>
-                </div>
+            </template>
+            <div class="chart-box">
+              <v-chart class="chart" :option="distributionChartOption" autoresize />
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+
+      <!-- 3. 下方混合区：待办机构 + 快捷入口 -->
+      <el-row :gutter="20" class="bottom-row">
+        <!-- 待审核机构列表 -->
+        <el-col :xs="24" :md="14">
+          <el-card class="modern-card">
+            <template #header>
+              <div class="card-header-flex">
+                <div class="card-title"><el-icon><Bell /></el-icon> 待审核机构</div>
+                <el-tag type="danger" effect="dark" round v-if="pendingOrgs.length">
+                  {{ pendingOrgs.length }} 项待办
+                </el-tag>
               </div>
-            </el-tab-pane>
+            </template>
             
-            <el-tab-pane label="待审核机构" name="orgs">
-              <div v-if="pendingOrgs.length === 0" class="empty-state">
-                <el-empty description="暂无待审核机构" />
-              </div>
-              <div v-else class="pending-list">
-                <div 
-                  v-for="org in pendingOrgs" 
-                  :key="org.id"
-                  class="pending-item"
-                >
-                  <div class="org-avatar">
+            <div v-if="pendingOrgs.length === 0" class="empty-state">
+              <el-empty description="暂无新的机构申请" :image-size="100" />
+            </div>
+            <div v-else class="org-audit-list">
+              <div v-for="org in pendingOrgs" :key="org.id" class="org-audit-item">
+                <div class="org-info-box">
+                  <div class="org-logo">
                     <el-icon><OfficeBuilding /></el-icon>
                   </div>
-                  <div class="pending-info">
-                    <div class="pending-title">{{ org.name }}</div>
-                    <div class="pending-meta">
-                      <span>联系人：{{ org.contact }}</span>
-                      <span class="pending-time">{{ formatTime(org.createdAt) }}</span>
-                    </div>
-                  </div>
-                  <div class="pending-actions">
-                    <el-button 
-                      type="success" 
-                      size="small"
-                      @click="handleAuditOrg(org.id, 'approve')"
-                    >
-                      通过
-                    </el-button>
-                    <el-button 
-                      type="danger" 
-                      size="small"
-                      @click="handleAuditOrg(org.id, 'reject')"
-                    >
-                      拒绝
-                    </el-button>
+                  <div class="org-text">
+                    <h4>{{ org.name }}</h4>
+                    <p>申请人：{{ org.contact }} · {{ formatTime(org.createdAt) }}</p>
                   </div>
                 </div>
+                <div class="org-btns">
+                  <el-button type="success" size="small" @click="handleAuditOrg(org.id, 'approve')" round>通过</el-button>
+                  <el-button type="danger" size="small" plain @click="handleAuditOrg(org.id, 'reject')" round>拒绝</el-button>
+                </div>
               </div>
-            </el-tab-pane>
-          </el-tabs>
-        </el-card>
-      </div>
-    </div>
+            </div>
+          </el-card>
+        </el-col>
 
-    <!-- 快捷操作 -->
-    <div class="quick-actions">
-      <div class="page-container">
-        <el-row :gutter="16">
-          <el-col :xs="12" :sm="4">
-            <div class="action-item" @click="router.push('/admin/pet-audits')">
-              <el-icon size="32"><Document /></el-icon>
-              <div>宠物审核</div>
+        <!-- 快捷操作格栅 -->
+        <el-col :xs="24" :md="10">
+          <div class="quick-nav-grid">
+            <div v-for="nav in quickNavs" :key="nav.path" class="nav-card" @click="router.push(nav.path)">
+              <div class="nav-icon-wrap" :style="{ color: nav.color }">
+                <el-icon size="28"><component :is="nav.icon" /></el-icon>
+              </div>
+              <span class="nav-name">{{ nav.name }}</span>
             </div>
-          </el-col>
-          
-          <el-col :xs="12" :sm="4">
-            <div class="action-item" @click="router.push('/admin/users')">
-              <el-icon size="32"><User /></el-icon>
-              <div>用户管理</div>
-            </div>
-          </el-col>
-          
-          <el-col :xs="12" :sm="4">
-            <div class="action-item" @click="router.push('/admin/notices')">
-              <el-icon size="32"><Bell /></el-icon>
-              <div>公告管理</div>
-            </div>
-          </el-col>
-          
-          <el-col :xs="12" :sm="4">
-            <div class="action-item" @click="router.push('/admin/tags')">
-              <el-icon size="32"><Collection /></el-icon>
-              <div>标签管理</div>
-            </div>
-          </el-col>
-          
-          <el-col :xs="12" :sm="4">
-            <div class="action-item" @click="router.push('/admin/config')">
-              <el-icon size="32"><Setting /></el-icon>
-              <div>系统配置</div>
-            </div>
-          </el-col>
-          
-          <el-col :xs="12" :sm="4">
-            <div class="action-item" @click="router.push('/admin/audit-logs')">
-              <el-icon size="32"><Document /></el-icon>
-              <div>审计日志</div>
-            </div>
-          </el-col>
-        </el-row>
-      </div>
+          </div>
+        </el-col>
+      </el-row>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
-import PageHeader from '@/components/common/PageHeader.vue'
 import { 
-  User, OfficeBuilding, Files, Select, Document, Bell,
-  Collection, Setting 
+  User, OfficeBuilding, Files, Select, Bell, Collection, 
+  Setting, House, Refresh, TrendCharts, PieChart, Document 
 } from '@element-plus/icons-vue'
+
+// ECharts 引入 (假设你已安装 vue-echarts)
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { LineChart, PieChart as EPieChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
+import VChart from 'vue-echarts'
+
+use([CanvasRenderer, LineChart, EPieChart, GridComponent, TooltipComponent, LegendComponent])
 
 const router = useRouter()
 const authStore = useAuthStore()
+const loading = ref(false)
 
-// 响应式数据
-const activeTab = ref('pets')
+// 统计数据
 const stats = ref({
-  totalUsers: 0,
-  totalOrgs: 0,
-  totalPets: 0,
-  totalAdoptions: 0
+  totalUsers: 1250,
+  totalOrgs: 45,
+  totalPets: 680,
+  totalAdoptions: 320
 })
 
-const pendingPets = ref([])
-const pendingOrgs = ref([])
+const statConfigs = computed(() => [
+  { label: '总用户数', value: stats.value.totalUsers, icon: 'User', color: '#409EFF', trend: 12 },
+  { label: '机构数量', value: stats.value.totalOrgs, icon: 'OfficeBuilding', color: '#67C23A', trend: 5 },
+  { label: '宠物总数', value: stats.value.totalPets, icon: 'Files', color: '#E6A23C', trend: 8 },
+  { label: '成功领养', value: stats.value.totalAdoptions, icon: 'Select', color: '#F56C6C', trend: 15 }
+])
+
+const quickNavs = [
+  { name: '用户管理', icon: 'User', path: '/admin/users', color: '#409EFF' },
+  { name: '公告管理', icon: 'Bell', path: '/admin/notices', color: '#E6A23C' },
+  { name: '标签字典', icon: 'Collection', path: '/admin/tags', color: '#67C23A' },
+  { name: '系统配置', icon: 'Setting', path: '/admin/config', color: '#909399' },
+  { name: '审计日志', icon: 'Document', path: '/admin/audit-logs', color: '#F56C6C' }
+]
+
+const pendingOrgs = ref([
+  { id: 1, name: '萌宠避难所', contact: '张馆长', createdAt: new Date() }
+])
+
+// 图表配置
+const growthChartOption = ref({
+  tooltip: { trigger: 'axis' },
+  grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+  xAxis: { type: 'category', boundaryGap: false, data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
+  yAxis: { type: 'value' },
+  series: [{
+    name: '活跃量', type: 'line', smooth: true,
+    data: [150, 230, 224, 218, 135, 147, 260],
+    itemStyle: { color: '#409EFF' },
+    areaStyle: { color: 'rgba(64, 158, 255, 0.1)' }
+  }]
+})
+
+const distributionChartOption = ref({
+  tooltip: { trigger: 'item' },
+  legend: { bottom: '0', icon: 'circle' },
+  series: [{
+    type: 'pie', radius: ['40%', '70%'],
+    itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
+    label: { show: false },
+    data: [
+      { value: 1048, name: '已完成' },
+      { value: 735, name: '进行中' },
+      { value: 580, name: '已退回' }
+    ]
+  }]
+})
 
 // 方法
-const formatTime = (time) => {
-  return new Date(time).toLocaleString()
-}
+const formatTime = (t) => new Date(t).toLocaleDateString()
+const goToUserHome = () => router.push('/home')
 
-const handleAuditPet = async (petId, action) => {
-  try {
-    // TODO: 调用审核API
-    console.log(`审核宠物 ${petId}: ${action}`)
-    
-    // 从列表中移除
-    const index = pendingPets.value.findIndex(pet => pet.id === petId)
-    if (index > -1) {
-      pendingPets.value.splice(index, 1)
-    }
-  } catch (error) {
-    console.error('审核失败:', error)
-  }
-}
-
-const handleAuditOrg = async (orgId, action) => {
-  try {
-    // TODO: 调用审核API
-    console.log(`审核机构 ${orgId}: ${action}`)
-    
-    // 从列表中移除
-    const index = pendingOrgs.value.findIndex(org => org.id === orgId)
-    if (index > -1) {
-      pendingOrgs.value.splice(index, 1)
-    }
-  } catch (error) {
-    console.error('审核失败:', error)
-  }
+const handleAuditOrg = (id, action) => {
+  pendingOrgs.value = pendingOrgs.value.filter(o => o.id !== id)
 }
 
 const loadDashboardData = async () => {
-  try {
-    // TODO: 调用API获取数据
-    // 模拟数据
-    stats.value = {
-      totalUsers: 1250,
-      totalOrgs: 45,
-      totalPets: 680,
-      totalAdoptions: 320
-    }
-    
-    pendingPets.value = [
-      {
-        id: 1,
-        name: '小白',
-        breed: '萨摩耶',
-        image: 'https://picsum.photos/seed/pet1/100/100.jpg',
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
-      },
-      {
-        id: 2,
-        name: '黑黑',
-        breed: '黑猫',
-        image: 'https://picsum.photos/seed/pet2/100/100.jpg',
-        createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000)
-      }
-    ]
-    
-    pendingOrgs.value = [
-      {
-        id: 1,
-        name: '爱心宠物救助中心',
-        contact: '王经理',
-        createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000)
-      }
-    ]
-  } catch (error) {
-    console.error('加载数据失败:', error)
-  }
+  loading.value = true
+  // 模拟 API 请求
+  setTimeout(() => { loading.value = false }, 800)
 }
 
-// 生命周期
 onMounted(() => {
-  // 检查权限
-  if (!authStore.isLoggedIn) {
-    router.push('/login')
-    return
-  }
-  
-  if (!authStore.checkPermission('admin:access')) {
-    router.push('/403')
-    return
-  }
-  
+  if (!authStore.isLoggedIn) router.push('/login')
   loadDashboardData()
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .admin-dashboard {
   min-height: 100vh;
-  background: var(--bg-light);
+  background-color: #f6f8fb;
+  position: relative;
+  overflow: hidden;
 }
 
-.overview-section {
-  padding: var(--spacing-lg) 0;
+.dashboard-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 300px;
+  background: linear-gradient(180deg, #ecf5ff 0%, #f6f8fb 100%);
+  z-index: 0;
 }
 
-.overview-card {
-  margin-bottom: var(--spacing-md);
+.dashboard-content {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-.overview-content {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
+/* 统计卡片区 */
+.stat-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
 }
 
-.overview-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: var(--border-radius-large);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-}
-
-.overview-icon.users {
-  background: linear-gradient(45deg, #409EFF, #66B1FF);
-}
-
-.overview-icon.orgs {
-  background: linear-gradient(45deg, #67C23A, #85CE61);
-}
-
-.overview-icon.pets {
-  background: linear-gradient(45deg, #E6A23C, #EEBE77);
-}
-
-.overview-icon.adoptions {
-  background: linear-gradient(45deg, #F56C6C, #F78989);
-}
-
-.overview-info {
-  flex: 1;
-}
-
-.overview-number {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1;
-}
-
-.overview-label {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-  margin-top: var(--spacing-xs);
-}
-
-.charts-section {
-  padding: 0 0 var(--spacing-lg) 0;
-}
-
-.charts-section h3 {
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.chart-placeholder {
-  height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pending-section {
-  padding: 0 0 var(--spacing-lg) 0;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.card-header h3 {
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.empty-state {
-  padding: var(--spacing-xl) 0;
-}
-
-.pending-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.pending-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-md);
-  border: 1px solid var(--border-light);
-  border-radius: var(--border-radius-base);
-  transition: all var(--transition-fast);
-}
-
-.pending-item:hover {
-  border-color: var(--primary-color);
-  box-shadow: var(--shadow-light);
-}
-
-.pending-image {
-  width: 60px;
-  height: 60px;
-  border-radius: var(--border-radius-base);
-  flex-shrink: 0;
-}
-
-.org-avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: var(--border-radius-base);
-  background: var(--bg-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-}
-
-.pending-info {
-  flex: 1;
-}
-
-.pending-title {
-  font-size: var(--font-size-base);
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-xs);
-}
-
-.pending-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.pending-time {
-  margin-left: auto;
-}
-
-.pending-actions {
-  display: flex;
-  gap: var(--spacing-sm);
-  flex-shrink: 0;
-}
-
-.quick-actions {
-  padding: var(--spacing-lg) 0;
-}
-
-.action-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-xl);
+.glass-stat-card {
   background: white;
-  border-radius: var(--border-radius-large);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  color: var(--text-regular);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+  transition: transform 0.3s ease;
+  &:hover { transform: translateY(-5px); }
+
+  .stat-icon {
+    width: 54px; height: 54px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 24px;
+    margin-right: 18px;
+  }
+
+  .stat-main {
+    flex: 1;
+    .stat-value { font-size: 28px; font-weight: 800; color: #303133; line-height: 1.2; }
+    .stat-label { font-size: 13px; color: #909399; }
+  }
+
+  .stat-trend {
+    display: flex; flex-direction: column; align-items: flex-end;
+    .up { color: #67C23A; font-weight: bold; font-size: 14px; }
+    .trend-label { font-size: 11px; color: #ccc; }
+  }
 }
 
-.action-item:hover {
-  background: var(--primary-color);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-base);
+/* 通用卡片样式 */
+.modern-card {
+  border-radius: 20px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.02) !important;
+  margin-bottom: 20px;
+
+  .card-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 16px; font-weight: 700; color: #303133;
+  }
+}
+
+.chart-box {
+  height: 320px;
+  .chart { width: 100%; height: 100%; }
+}
+
+/* 机构审核列表 */
+.org-audit-list {
+  display: flex; flex-direction: column; gap: 15px;
+}
+
+.org-audit-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 15px; background: #fafafa; border-radius: 16px;
+  
+  .org-info-box {
+    display: flex; align-items: center; gap: 15px;
+    .org-logo {
+      width: 45px; height: 45px; background: white;
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      color: #909399; font-size: 20px;
+    }
+    .org-text {
+      h4 { margin: 0; font-size: 15px; color: #333; }
+      p { margin: 2px 0 0; font-size: 12px; color: #999; }
+    }
+  }
+}
+
+/* 快捷导航网格 */
+.quick-nav-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.nav-card {
+  background: white; border-radius: 20px; padding: 25px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  cursor: pointer; transition: 0.3s;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+
+  &:hover { background: #409EFF; color: white !important;
+    .nav-icon-wrap { color: white !important; transform: scale(1.1); }
+    .nav-name { color: white; }
+  }
+
+  .nav-icon-wrap { transition: 0.3s; }
+  .nav-name { font-size: 14px; font-weight: 600; color: #606266; }
+}
+
+.card-header-flex {
+  display: flex; justify-content: space-between; align-items: center;
 }
 
 @media (max-width: 768px) {
-  .overview-section,
-  .charts-section,
-  .pending-section,
-  .quick-actions {
-    padding: var(--spacing-md) 0;
-  }
-  
-  .overview-content {
-    gap: var(--spacing-sm);
-  }
-  
-  .overview-icon {
-    width: 50px;
-    height: 50px;
-  }
-  
-  .overview-number {
-    font-size: var(--font-size-lg);
-  }
-  
-  .pending-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
-  }
-  
-  .pending-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-xs);
-  }
-  
-  .pending-time {
-    margin-left: 0;
-  }
+  .quick-nav-grid { grid-template-columns: 1fr 1fr; }
+  .stat-container { grid-template-columns: 1fr 1fr; }
 }
 </style>

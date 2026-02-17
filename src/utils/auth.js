@@ -93,13 +93,17 @@ export function getUserIdFromToken() {
 export function getUserRoleFromToken() {
   const payload = getTokenPayload(getAccessToken())
   
+  console.log('Token payload for role:', payload)
+  
   // 优先从 role 字段获取
   if (payload?.role) {
+    console.log('Found role in token:', payload.role)
     return payload.role
   }
   
   // 如果没有 role 字段，从 authorities 数组中提取
   if (payload?.authorities && Array.isArray(payload.authorities)) {
+    console.log('Found authorities:', payload.authorities)
     // 将 ['ROLE_ORG', 'ROLE_ADMIN'] 转换为 ['ORG', 'ADMIN']
     const authorities = payload.authorities.map(auth => {
       if (auth.startsWith('ROLE_')) {
@@ -115,5 +119,14 @@ export function getUserRoleFromToken() {
     if (authorities.includes('USER')) return 'USER'
   }
   
+  // 检查是否有其他角色标识
+  if (payload?.roles && Array.isArray(payload.roles)) {
+    console.log('Found roles:', payload.roles)
+    if (payload.roles.includes('ADMIN')) return 'ADMIN'
+    if (payload.roles.includes('ORG')) return 'ORG'
+    if (payload.roles.includes('USER')) return 'USER'
+  }
+  
+  console.log('No role found in token')
   return null
 }

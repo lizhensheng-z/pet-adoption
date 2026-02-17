@@ -99,9 +99,8 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Back, Edit, Picture } from '@element-plus/icons-vue'
-import AppLayout from '@/components/layout/AppLayout.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
-import petApi from '@/api/modules/pet.js'
+import {petAPI} from '@/api/modules/pet.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -113,7 +112,7 @@ const loading = ref(false)
 const getPetDetail = async () => {
   loading.value = true
   try {
-    const { data } = await petApi.getPetDetail(Number(route.params.id))
+    const { data } = await petAPI.getPetDetail(Number(route.params.id))
     petDetail.value = data
   } catch (error) {
     ElMessage.error('获取宠物详情失败')
