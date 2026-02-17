@@ -112,7 +112,17 @@ const handleLogin = async () => {
     // 4. 确定跳转路径
     let targetPath = '/home'
     if (role === 'ADMIN') targetPath = '/admin'
-    else if (role === 'ORG') targetPath = '/org'
+    else if (role === 'ORG') {
+      // 根据机构状态决定跳转路径
+      const user = authStore.user
+      if (user?.orgStatus === 'PENDING' && !user?.orgProfileComplete) {
+        targetPath = '/org/profile/complete'
+      } else if (user?.orgStatus === 'REJECTED') {
+        targetPath = '/org/profile'
+      } else {
+        targetPath = '/org'
+      }
+    }
     
     console.log('4. 准备跳转至:', targetPath)
 

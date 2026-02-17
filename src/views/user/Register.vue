@@ -119,8 +119,14 @@ const handleRegister = async () => {
     })
     ElMessage.success('注册成功，请登录')
     
-    // 注册成功后跳转到登录页面
-    router.push('/login')
+    // 注册成功后的处理
+    if (form.value.role === 'ORG') {
+      ElMessage.success('注册成功，请完善机构资料')
+      router.push('/org/profile/complete')
+    } else {
+      ElMessage.success('注册成功，请登录')
+      router.push('/login')
+    }
   } catch (error) {
     console.error('注册失败:', error)
   } finally {

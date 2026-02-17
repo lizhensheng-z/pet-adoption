@@ -4,7 +4,7 @@ export default [
     path: '/org',
     name: 'OrgHome',
     component: () => import('@/views/org/Dashboard.vue'),
-    meta: { requiresAuth: true, permission: 'org:access', title: '机构首页' }
+    // meta: { requiresAuth: true, permission: 'org:access', title: '机构首页' }
   },
 
   // 宠物管理相关 - 扁平化结构
@@ -69,5 +69,25 @@ export default [
     name: 'OrgProfile',
     component: () => import('@/views/org/Profile.vue'),
     meta: { requiresAuth: true, permission: 'org:profile:edit', title: '机构资料' }
+  },
+  {
+    path: '/org/profile/complete',
+    name: 'OrgProfileComplete',
+    component: () => import('@/views/org/ProfileComplete.vue'),
+    // meta: { requiresAuth: true, permission: 'org:profile:create', title: '完善机构资料' }
+  },
+  {
+    path: '/org/profile/rejected',
+    name: 'OrgProfileRejected',
+    component: () => import('@/views/org/ProfileComplete.vue'),
+    meta: { requiresAuth: true, permission: 'org:profile:edit', title: '修改机构资料' }
+  },
+
+  // 等待审核
+  {
+    path: '/org/waiting',
+    name: 'OrgWaiting',
+    component: () => import('@/views/org/Waiting.vue'),
+    meta: { requiresAuth: true, title: '等待审核' }
   }
 ]

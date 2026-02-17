@@ -59,41 +59,48 @@ export const useAuthStore = defineStore('auth', {
         // response.data 才是真正的业务数据
         const loginData = response.data
 
-        if (!loginData || !loginData.accessToken) {
+        if (!loginData || !loginData.token) {
           throw new Error('登录返回数据异常')
         }
 
         console.log('登录数据:', loginData)
 
-        // 解构登录数据（注意：后端返回的是 userId）
-        const { accessToken, refreshToken, permissions, userId, username, role, avatar } = loginData
+        // 解构登录数据
+        const { token, refreshToken } = loginData
+        const user = loginData.user
+
+        if (!user) {
+          throw new Error('用户信息缺失')
+        }
 
         // 保存到 state
-        this.token = accessToken
+        this.token = token
         this.refreshToken = refreshToken
 
         // 保存到 localStorage
-        setAccessToken(accessToken)
+        setAccessToken(token)
         setRefreshToken(refreshToken)
 
-// 设置用户信息（使用 userId 字段）
+        // 设置用户信息
         this.user = {
-          id: userId,
-          username: username,
-          role: role,
-          avatar: avatar
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          avatar: user.avatar,
+          orgStatus: user.orgStatus,
+          orgProfileComplete: user.orgProfileComplete
         }
 
         // 转换权限格式：将 ROLE_ORG, ROLE_ADMIN 等转换为具体的权限列表
-        this.permissions = this.convertPermissions(permissions || [])
+        this.permissions = this.convertPermissions(user.permissions || user.authorities || [])
         
         // 确保管理员拥有所有权限
-        if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
+        if (user.role === 'ADMIN' || user.role === 'ROLE_ADMIN') {
           this.permissions = ['*']
         }
 
         console.log('登录成功，用户信息:', this.user)
-        console.log('当前角色:', role)
+        console.log('当前角色:', this.user?.role)
 
         return loginData
       } catch (error) {
@@ -161,21 +168,22 @@ export const useAuthStore = defineStore('auth', {
 
         console.log('用户数据:', userData)
 
-        // 解构用户数据（注意：后端返回的是 userId）
-const { userId, username, role, avatar, phone, email, status, createTime, permissions } = userData
+        const user = userData
 
         this.user = {
-          id: userId,
-          username: username,
-          role: role,
-          avatar: avatar,
-          phone: phone,
-          email: email,
-          status: status,
-          createTime: createTime
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          avatar: user.avatar,
+          phone: user.phone,
+          email: user.email,
+          status: user.status,
+          createTime: user.createTime,
+          orgStatus: user.orgStatus,
+          orgProfileComplete: user.orgProfileComplete
         }
         // 转换权限格式（ROLE_ORG -> 具体权限列表）
-        this.permissions = this.convertPermissions(permissions || [])
+        this.permissions = this.convertPermissions(user.permissions || [])
 
         console.log('用户信息更新成功:', this.user)
 
@@ -225,11 +233,11 @@ const { userId, username, role, avatar, phone, email, status, createTime, permis
         // 响应拦截器已经处理了，response 格式为 { code, message, data }
         const tokenData = response.data
 
-        const { accessToken, refreshToken: newRefreshToken } = tokenData
+        const { token, refreshToken: newRefreshToken } = tokenData
 
-        this.token = accessToken
+        this.token = token
         this.refreshToken = newRefreshToken
-        setAccessToken(accessToken)
+        setAccessToken(token)
         setRefreshToken(newRefreshToken)
 
         console.log('Token刷新成功')

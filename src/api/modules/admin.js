@@ -135,7 +135,22 @@ export const statsApi = {
   getPetStats: () => http.get('/admin/stats/pets'),
   
   // 获取机构统计信息
-  getOrgStats: () => http.get('/admin/stats/orgs')
+  getOrgStats: () => http.get('/admin/stats/orgs'),
+  
+  // 获取Dashboard统计数据
+  getDashboardStats: () => http.get('/admin/dashboard/stats'),
+  
+  // 获取Dashboard图表数据
+  getDashboardCharts: (params) => http.get('/admin/dashboard/charts', params),
+  
+  // 获取待审核机构列表
+  getPendingOrgs: (params) => http.get('/admin/organizations/pending', params),
+  
+  // 审核机构
+  auditOrganization: (id, data) => http.put(`/admin/organizations/${id}/audit`, data),
+  
+  // 获取公告摘要
+  getNoticesSummary: () => http.get('/admin/notices/summary')
 }
 
 // 系统配置相关API

@@ -13,6 +13,9 @@
       </template>
     </PageHeader>
 
+    <!-- 机构状态提示 -->
+    <OrgStatusAlert :only-org="true" />
+
     <div class="dashboard-content">
       <!-- 统计卡片 -->
       <div class="stats-section">
@@ -110,6 +113,7 @@ import QuickActions from '@/components/org/QuickActions.vue'
 import DashboardTodoList from '@/components/org/DashboardTodoList.vue'
 import DashboardRecentPets from '@/components/org/DashboardRecentPets.vue'
 import DashboardRecentApplications from '@/components/org/DashboardRecentApplications.vue'
+import OrgStatusAlert from '@/components/common/OrgStatusAlert.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()

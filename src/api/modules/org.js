@@ -104,6 +104,21 @@ export const orgAPI = {
     return http.get('/org/profile')
   },
 
+  // 创建机构资料
+  createOrgProfile(data) {
+    return http.post('/org/profile', data)
+  },
+
+  // 更新机构资料
+  updateOrgProfile(data) {
+    return http.post('/org/profile', data)
+  },
+
+  // 检查机构资料完整性
+  checkProfileComplete() {
+    return http.get('/org/profile/complete')
+  },
+
   // 获取最近宠物列表
   getRecentPets(params = {}) {
     return http.get('/org/pets/recent', params)

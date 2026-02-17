@@ -189,7 +189,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Picture, Refresh } from '@element-plus/icons-vue'
 import { getOrgApplications, OrgApplicationStatusMap, OrgApplicationStatusColor } from '@/api/modules/org-adoption'
-import petApi from '@/api/modules/pet'
+import { petAPI } from '@/api/modules/pet'
 import PageHeader from '@/components/common/PageHeader.vue'
 
 const router = useRouter()
@@ -309,7 +309,7 @@ const formatTime = (time) => {
 
 const loadPetOptions = async () => {
   try {
-    const { data } = await petApi.getOrgPetList({
+    const { data } = await petAPI.getOrgPetList({
       pageNo: 1,
       pageSize: 100, // 获取所有宠物
       status: 'PUBLISHED' // 只获取已发布的宠物

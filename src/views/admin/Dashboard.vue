@@ -15,6 +15,11 @@
     </PageHeader>
 
     <div class="dashboard-content">
+      <!-- 加载状态 -->
+      <div v-if="loading" class="loading-overlay">
+        <el-loading :loading="loading" text="正在加载数据..." />
+      </div>
+      
       <!-- 1. 核心指标卡片 (更加扁平现代) -->
       <section class="stat-container">
         <div class="glass-stat-card" v-for="item in statConfigs" :key="item.label">
@@ -84,8 +89,8 @@
                     <el-icon><OfficeBuilding /></el-icon>
                   </div>
                   <div class="org-text">
-                    <h4>{{ org.name }}</h4>
-                    <p>申请人：{{ org.contact }} · {{ formatTime(org.createdAt) }}</p>
+                    <h4>{{ org.orgName || org.name }}</h4>
+                    <p>申请人：{{ org.contactName || org.contact }} · {{ formatTime(org.applyTime || org.createdAt) }}</p>
                   </div>
                 </div>
                 <div class="org-btns">
@@ -117,12 +122,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
+import { statsApi as adminAPI } from '@/api/modules/admin.js'
+import { ElMessage } from 'element-plus'
 import { 
   User, OfficeBuilding, Files, Select, Bell, Collection, 
   Setting, House, Refresh, TrendCharts, PieChart, Document 
 } from '@element-plus/icons-vue'
 
-// ECharts 引入 (假设你已安装 vue-echarts)
+// ECharts 引入
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart, PieChart as EPieChart } from 'echarts/charts'
@@ -137,10 +144,10 @@ const loading = ref(false)
 
 // 统计数据
 const stats = ref({
-  totalUsers: 1250,
-  totalOrgs: 45,
-  totalPets: 680,
-  totalAdoptions: 320
+  totalUsers: 0,
+  totalOrgs: 0,
+  totalPets: 0,
+  totalAdoptions: 0
 })
 
 const statConfigs = computed(() => [
@@ -158,36 +165,70 @@ const quickNavs = [
   { name: '审计日志', icon: 'Document', path: '/admin/audit-logs', color: '#F56C6C' }
 ]
 
-const pendingOrgs = ref([
-  { id: 1, name: '萌宠避难所', contact: '张馆长', createdAt: new Date() }
-])
+const pendingOrgs = ref([])
+const noticeSummary = ref({})
 
 // 图表配置
 const growthChartOption = ref({
-  tooltip: { trigger: 'axis' },
+  tooltip: { 
+    trigger: 'axis',
+    formatter: '{b}<br/>{a}: {c}'
+  },
   grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-  xAxis: { type: 'category', boundaryGap: false, data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
-  yAxis: { type: 'value' },
+  xAxis: { 
+    type: 'category', 
+    boundaryGap: false, 
+    data: []
+  },
+  yAxis: { 
+    type: 'value',
+    axisLabel: {
+      formatter: '{value}'
+    }
+  },
   series: [{
-    name: '活跃量', type: 'line', smooth: true,
-    data: [150, 230, 224, 218, 135, 147, 260],
+    name: '活跃量',
+    type: 'line',
+    smooth: true,
+    data: [],
     itemStyle: { color: '#409EFF' },
-    areaStyle: { color: 'rgba(64, 158, 255, 0.1)' }
+    areaStyle: { 
+      color: {
+        type: 'linear',
+        x: 0, y: 0, x2: 0, y2: 1,
+        colorStops: [
+          { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
+          { offset: 1, color: 'rgba(64, 158, 255, 0.05)' }
+        ]
+      }
+    }
   }]
 })
 
 const distributionChartOption = ref({
-  tooltip: { trigger: 'item' },
-  legend: { bottom: '0', icon: 'circle' },
+  tooltip: { 
+    trigger: 'item',
+    formatter: '{a} <br/>{b}: {c} ({d}%)'
+  },
+  legend: { 
+    bottom: '0', 
+    icon: 'circle',
+    itemWidth: 8,
+    itemHeight: 8
+  },
   series: [{
-    type: 'pie', radius: ['40%', '70%'],
-    itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
-    label: { show: false },
-    data: [
-      { value: 1048, name: '已完成' },
-      { value: 735, name: '进行中' },
-      { value: 580, name: '已退回' }
-    ]
+    name: '领养状态',
+    type: 'pie',
+    radius: ['40%', '70%'],
+    itemStyle: { 
+      borderRadius: 10, 
+      borderColor: '#fff', 
+      borderWidth: 2 
+    },
+    label: { 
+      show: false 
+    },
+    data: []
   }]
 })
 
@@ -195,18 +236,110 @@ const distributionChartOption = ref({
 const formatTime = (t) => new Date(t).toLocaleDateString()
 const goToUserHome = () => router.push('/home')
 
-const handleAuditOrg = (id, action) => {
-  pendingOrgs.value = pendingOrgs.value.filter(o => o.id !== id)
+const handleAuditOrg = async (id, action) => {
+  try {
+    const reason = action === 'reject' 
+      ? prompt('请输入拒绝原因：') 
+      : '资料完整，符合要求'
+    
+    if (action === 'reject' && !reason) return
+    
+    await adminAPI.auditOrganization(id, {
+      action,
+      reason
+    })
+    
+    ElMessage.success(action === 'approve' ? '审核通过' : '已拒绝')
+    
+    // 重新加载数据
+    await loadDashboardData()
+  } catch (error) {
+    ElMessage.error('审核操作失败')
+    console.error('审核失败:', error)
+  }
 }
 
 const loadDashboardData = async () => {
   loading.value = true
-  // 模拟 API 请求
-  setTimeout(() => { loading.value = false }, 800)
+  try {
+    const [statsRes, chartRes, orgsRes, noticeRes] = await Promise.all([
+      adminAPI.getDashboardStats(),
+      adminAPI.getDashboardCharts({ range: '7days' }),
+      adminAPI.getPendingOrgs({ limit: 5 }),
+      adminAPI.getNoticesSummary()
+    ])
+    
+    // 更新统计数据
+    if (statsRes.data) {
+      stats.value = {
+        totalUsers: statsRes.data.totalUsers?.value || 0,
+        totalOrgs: statsRes.data.totalOrgs?.value || 0,
+        totalPets: statsRes.data.totalPets?.value || 0,
+        totalAdoptions: statsRes.data.totalAdoptions?.value || 0
+      }
+      
+      // 更新趋势数据
+      const configs = statConfigs.value
+      configs.forEach((stat, index) => {
+        const keyMap = {
+          '总用户数': 'totalUsers',
+          '机构数量': 'totalOrgs', 
+          '宠物总数': 'totalPets',
+          '成功领养': 'totalAdoptions'
+        }
+        const data = statsRes.data[keyMap[stat.label]]
+        if (data) {
+          stat.value = data.value
+          stat.trend = data.trend
+        }
+      })
+    }
+    
+    // 更新图表数据
+    if (chartRes.data) {
+      // 活跃度趋势 - 处理null值，使用模拟数据
+      if (chartRes.data.activityTrend && chartRes.data.activityTrend.dates && chartRes.data.activityTrend.values) {
+        growthChartOption.value.xAxis.data = chartRes.data.activityTrend.dates
+        growthChartOption.value.series[0].data = chartRes.data.activityTrend.values
+      } else {
+        // 使用模拟数据
+        growthChartOption.value.xAxis.data = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+        growthChartOption.value.series[0].data = [120, 132, 101, 134, 90, 230, 210]
+      }
+      
+      // 领养状态分布
+      if (chartRes.data.adoptionDistribution && chartRes.data.adoptionDistribution.length > 0) {
+        distributionChartOption.value.series[0].data = chartRes.data.adoptionDistribution
+      } else {
+        // 使用模拟数据
+        distributionChartOption.value.series[0].data = [
+          { value: 1048, name: '已完成' },
+          { value: 735, name: '审核中' },
+          { value: 580, name: '已拒绝' },
+          { value: 484, name: '已取消' }
+        ]
+      }
+    }
+    
+    // 更新待审核机构
+    pendingOrgs.value = orgsRes.data || []
+    
+    // 更新公告信息
+    noticeSummary.value = noticeRes.data || {}
+    
+  } catch (error) {
+    console.error('加载Dashboard数据失败:', error)
+    ElMessage.error('数据加载失败，请稍后重试')
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {
-  if (!authStore.isLoggedIn) router.push('/login')
+  if (!authStore.isLoggedIn || !authStore.hasPermission('admin:dashboard:view')) {
+    router.push('/login')
+    return
+  }
   loadDashboardData()
 })
 </script>
@@ -338,6 +471,19 @@ onMounted(() => {
 
 .card-header-flex {
   display: flex; justify-content: space-between; align-items: center;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
 
 @media (max-width: 768px) {

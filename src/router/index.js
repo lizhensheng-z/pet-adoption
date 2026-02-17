@@ -62,15 +62,13 @@ router.beforeEach(async (to, from, next) => {
   }
 
   // 2. 如果去的是登录页但已经有 token 了，检查是否是主动访问
-  // 如果是从其他页面点击登录按钮，重定向到首页
-  // 如果是直接访问 /login（比如刷新登录页），也重定向到首页
   if (to.path === '/login' && token) {
     console.log('检测到已登录用户访问登录页，重定向到首页')
     next('/home')
     return
   }
 
-// 3. 确保AuthStore用户状态同步
+  // 3. 确保AuthStore用户状态同步
   if (token) {
     const authStore = useAuthStore()
     if (!authStore.user) {
@@ -79,7 +77,41 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-// 4. 权限检查
+  // 4. 机构用户状态检查
+  if (token && to.path.startsWith('/org/')) {
+    const authStore = useAuthStore()
+    const user = authStore.user
+    
+    if (user?.role === 'ORG') {
+      // 检查机构状态
+      switch (user.orgStatus) {
+        case 'PENDING':
+          // 只允许访问等待页面和资料页面
+          if (!['/org/waiting', '/org/profile', '/org/profile/complete', '/org/profile/rejected'].includes(to.path)) {
+            next('/org/waiting')
+            return
+          }
+          break
+        case 'REJECTED':
+          // 只允许访问资料修改页面
+          if (!['/org/profile/rejected', '/org/profile', '/org/waiting'].includes(to.path)) {
+            next('/org/profile')
+            return
+          }
+          break
+        case undefined:
+        case null:
+          // 未完善资料，跳转到完善页面
+          if (to.path !== '/org/profile/complete') {
+            next('/org/profile/complete')
+            return
+          }
+          break
+      }
+    }
+  }
+
+  // 5. 权限检查
   if (to.meta.permission && token) {
     const userRole = getUserRoleFromToken()
     const requiredPermission = to.meta.permission
@@ -89,10 +121,8 @@ router.beforeEach(async (to, from, next) => {
     console.log('所需权限:', requiredPermission)
     console.log('从token获取的角色:', userRole)
 
-    // 检查用户角色和权限
     let hasPermission = false
     
-    // 管理员拥有所有权限
     if (userRole === 'ADMIN' || userRole === 'ROLE_ADMIN') {
       hasPermission = true
       console.log('管理员权限通过')
@@ -104,7 +134,6 @@ router.beforeEach(async (to, from, next) => {
     console.log('===================')
 
     if (!hasPermission) {
-      // 无权限，重定向到无权限页面或首页
       next('/403')
       return
     }
