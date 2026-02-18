@@ -1,12 +1,5 @@
 <template>
-      <PageHeader title="申请管理">
-      <template #actions>
-        <el-button type="primary" @click="handleRefresh">
-          <el-icon><Refresh /></el-icon>
-          刷新
-        </el-button>
-      </template>
-    </PageHeader>
+
   <div class="org-adoption-detail">
     <div class="page-header">
       <el-button type="text" @click="goBack">

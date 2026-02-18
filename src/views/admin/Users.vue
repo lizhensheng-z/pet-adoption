@@ -202,7 +202,6 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Download, Refresh, Plus } from '@element-plus/icons-vue'
-import AppLayout from '@/components/layout/AppLayout.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 
 import { userApi as adminAPI } from '@/api/modules/admin.js'
