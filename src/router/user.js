@@ -18,6 +18,12 @@ export default [
     meta: { title: '宠物详情' }
   },
   {
+    path: '/ai-assistant',
+    name: 'AIAssistant',
+    component: () => import('@/views/user/AIAssistant.vue'),
+    meta: { title: 'AI小助手' }
+  },
+  {
     path: '/apply/:petId',
     name: 'ApplyPet',
     component: () => import('@/views/user/ApplyPet.vue'),

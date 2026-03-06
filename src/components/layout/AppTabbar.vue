@@ -19,8 +19,8 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
-import { 
-  House, List, Star, DocumentCopy, User 
+import {
+  House, List, ChatDotRound, Star, DocumentCopy, User
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -31,6 +31,7 @@ const tabItems = computed(() => {
   const baseItems = [
     { path: '/home', name: '首页', icon: House },
     { path: '/pets', name: '宠物', icon: List },
+    { path: '/ai-assistant', name: 'AI助手', icon: ChatDotRound }
   ]
 
   const userItems = [
