@@ -219,14 +219,14 @@ export const useAuthStore = defineStore('auth', {
     },
 
 // 刷新token
-    async refreshToken() {
+    async refreshAccessToken() {
       try {
-        const refreshToken = getRefreshToken()
-        if (!refreshToken) {
+        const refreshTokenValue = getRefreshToken()
+        if (!refreshTokenValue) {
           throw new Error('No refresh token available')
         }
 
-        const response = await authAPI.refreshToken(refreshToken)
+        const response = await authAPI.refreshToken(refreshTokenValue)
 
         console.log('刷新token响应:', response)
 
@@ -254,7 +254,7 @@ export const useAuthStore = defineStore('auth', {
     async checkAndRefreshToken() {
       if (isAccessTokenExpired() && hasRefreshToken()) {
         try {
-          await this.refreshToken()
+          await this.refreshAccessToken()
           return true
         } catch (error) {
           return false
@@ -271,6 +271,17 @@ export const useAuthStore = defineStore('auth', {
 
 // 初始化用户信息（页面刷新时调用）
     async initUserInfo() {
+      // 检查 token 是否过期
+      if (this.token && isAccessTokenExpired()) {
+        console.log('Token 已过期，清除登录状态')
+        this.token = ''
+        this.refreshToken = ''
+        this.user = null
+        this.permissions = []
+        removeToken()
+        throw new Error('Token expired')
+      }
+
       if (this.token && !this.user) {
         try {
           console.log('初始化用户信息，token存在但user为null')
@@ -278,6 +289,13 @@ export const useAuthStore = defineStore('auth', {
           console.log('用户信息初始化完成:', this.user)
         } catch (error) {
           console.error('初始化用户信息失败:', error)
+          // 清除无效的登录状态
+          this.token = ''
+          this.refreshToken = ''
+          this.user = null
+          this.permissions = []
+          removeToken()
+          throw error
         }
       } else if (this.token && this.user) {
         console.log('用户信息已存在:', this.user)

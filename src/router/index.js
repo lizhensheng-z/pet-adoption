@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import userRoutes from './user.js'
 import orgRoutes from './org.js'
 import adminRoutes from './admin.js'
-import { getToken, getUserRoleFromToken } from '@/utils/auth.js'
+import { getToken, getUserRoleFromToken, isAccessTokenExpired, removeToken } from '@/utils/auth.js'
 import { useAuthStore } from '@/stores/auth.js'
 import AppLayout from '@/components/layout/AppLayout.vue' // 确保路径正确
 
@@ -54,34 +54,58 @@ const router = createRouter({
 // 路由守卫优化
 router.beforeEach(async (to, from, next) => {
   const token = getToken()
+  const tokenExpired = token ? isAccessTokenExpired() : true
 
-  // 1. 如果去的是需要登录的页面但没 token
-  if (to.meta.requiresAuth && !token) {
-    next('/login')
-    return
+  // 1. 如果去的是需要登录的页面
+  if (to.meta.requiresAuth) {
+    // 没有 token 或 token 已过期，跳转登录页
+    if (!token || tokenExpired) {
+      // 清除过期的 token
+      if (token && tokenExpired) {
+        removeToken()
+      }
+      next('/login')
+      return
+    }
   }
 
-  // 2. 如果去的是登录页但已经有 token 了，检查是否是主动访问
-  if (to.path === '/login' && token) {
+  // 2. 如果去的是登录页但已经有有效 token
+  if (to.path === '/login' && token && !tokenExpired) {
     console.log('检测到已登录用户访问登录页，重定向到首页')
     next('/home')
     return
   }
 
-  // 3. 确保AuthStore用户状态同步
-  if (token) {
+  // 3. 如果 token 过期但存在，清除并跳转登录页
+  if (token && tokenExpired && !to.meta.noAuthRequired) {
+    console.log('Token 已过期，清除并跳转登录页')
+    removeToken()
+    next('/login')
+    return
+  }
+
+  // 4. 确保AuthStore用户状态同步
+  if (token && !tokenExpired) {
     const authStore = useAuthStore()
     if (!authStore.user) {
-      console.log('同步AuthStore用户状态...')
-      await authStore.initUserInfo()
+      try {
+        console.log('同步AuthStore用户状态...')
+        await authStore.initUserInfo()
+      } catch (error) {
+        // 如果获取用户信息失败（可能是token无效），清除并跳转登录页
+        console.error('获取用户信息失败:', error)
+        removeToken()
+        next('/login')
+        return
+      }
     }
   }
 
-  // 4. 机构用户状态检查
-  if (token && to.path.startsWith('/org/')) {
+  // 5. 机构用户状态检查
+  if (token && !tokenExpired && to.path.startsWith('/org/')) {
     const authStore = useAuthStore()
     const user = authStore.user
-    
+
     if (user?.role === 'ORG') {
       // 检查机构状态
       switch (user.orgStatus) {
@@ -111,8 +135,8 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  // 5. 权限检查
-  if (to.meta.permission && token) {
+  // 6. 权限检查
+  if (to.meta.permission && token && !tokenExpired) {
     const userRole = getUserRoleFromToken()
     const requiredPermission = to.meta.permission
 
@@ -122,7 +146,7 @@ router.beforeEach(async (to, from, next) => {
     console.log('从token获取的角色:', userRole)
 
     let hasPermission = false
-    
+
     if (userRole === 'ADMIN' || userRole === 'ROLE_ADMIN') {
       hasPermission = true
       console.log('管理员权限通过')
