@@ -159,10 +159,11 @@ const statConfigs = computed(() => [
 
 const quickNavs = [
   { name: '用户管理', icon: 'User', path: '/admin/users', color: '#409EFF' },
-  { name: '公告管理', icon: 'Bell', path: '/admin/notices', color: '#E6A23C' },
-  { name: '标签字典', icon: 'Collection', path: '/admin/tags', color: '#67C23A' },
-  { name: '系统配置', icon: 'Setting', path: '/admin/config', color: '#909399' },
-  { name: '审计日志', icon: 'Document', path: '/admin/audit-logs', color: '#F56C6C' }
+  { name: '宠物审核', icon: 'Files', path: '/admin/pet-audits', color: '#E6A23C' },
+  { name: '公告管理', icon: 'Bell', path: '/admin/notices', color: '#67C23A' },
+  { name: '标签字典', icon: 'Collection', path: '/admin/tags', color: '#909399' },
+  { name: '系统配置', icon: 'Setting', path: '/admin/config', color: '#F56C6C' },
+  { name: '审计日志', icon: 'Document', path: '/admin/audit-logs', color: '#9C27B0' }
 ]
 
 const pendingOrgs = ref([])

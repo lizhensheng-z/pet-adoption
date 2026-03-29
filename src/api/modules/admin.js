@@ -89,22 +89,37 @@ export const userApi = {
 export const petApi = {
   // 获取宠物列表
   getPetList: (params) => http.get('/admin/pets', params),
-  
+
   // 获取宠物详情
   getPetDetail: (id) => http.get(`/admin/pets/${id}`),
-  
+
   // 创建宠物
   createPet: (data) => http.post('/admin/pets', data),
-  
+
   // 更新宠物
   updatePet: (id, data) => http.put(`/admin/pets/${id}`, data),
-  
+
   // 删除宠物
   deletePet: (id) => http.delete(`/admin/pets/${id}`),
-  
+
   // 更新宠物状态
-  updatePetStatus: (id, status) => 
+  updatePetStatus: (id, status) =>
     http.patch(`/admin/pets/${id}/status`, { status })
+}
+
+// 宠物审核相关API
+export const petAuditApi = {
+  // 获取待审核宠物列表
+  getPendingPets: (params) => http.get('/admin/pets/pending', params),
+
+  // 获取待审核宠物详情
+  getPetAuditDetail: (petId) => http.get(`/admin/pets/pending/${petId}`),
+
+  // 审核宠物
+  auditPet: (data) => http.post('/admin/pets/audit', data),
+
+  // 获取待审核宠物数量
+  countPendingPets: () => http.get('/admin/pets/pending/count')
 }
 
 // 机构管理相关API

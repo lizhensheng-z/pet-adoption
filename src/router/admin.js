@@ -11,18 +11,12 @@ export default [
     component: () => import('@/views/admin/Dashboard.vue'),
     meta: { requiresAuth: true, permission: 'admin:dashboard:view', title: '数据看板' }
   },
-  // {
-  //   path: '/admin/pet-audits',
-  //   name: 'AdminPetAudits',
-  //   component: () => import('@/views/admin/PetAudits.vue'),
-  //   meta: { requiresAuth: true, permission: 'admin:pet:audit', title: '宠物审核' }
-  // },
-  // {
-  //   path: '/admin/pet-audits/:id',
-  //   name: 'AdminPetAuditDetail',
-  //   component: () => import('@/views/admin/PetAuditDetail.vue'),
-  //   meta: { requiresAuth: true, permission: 'admin:pet:audit', title: '审核详情' }
-  // },
+  {
+    path: '/admin/pet-audits',
+    name: 'AdminPetAudits',
+    component: () => import('@/views/admin/PetAudit.vue'),
+    meta: { requiresAuth: true, permission: 'admin:pet:audit', title: '宠物审核' }
+  },
   {
     path: '/admin/users',
     name: 'AdminUsers',
