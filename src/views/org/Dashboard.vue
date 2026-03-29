@@ -1,7 +1,11 @@
 <template>
   <div class="org-dashboard">
-    <PageHeader title="机构首页">
+    <PageHeader :title="orgDisplayName">
       <template #actions>
+        <el-button @click="goToOrgProfile">
+          <el-icon><Setting /></el-icon>
+          机构设置
+        </el-button>
         <el-button @click="goToHome">
           <el-icon><House /></el-icon>
           返回首页
@@ -99,12 +103,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
 import { orgAPI } from '@/api/modules/org.js'
 import { ElMessage } from 'element-plus'
-import { Plus, House } from '@element-plus/icons-vue'
+import { Plus, House, Setting } from '@element-plus/icons-vue'
 
 // 组件导入
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -146,6 +150,14 @@ const recentApplications = ref([])
 
 // 机构信息
 const orgInfo = ref(null)
+
+// 计算机构显示名称
+const orgDisplayName = computed(() => {
+  if (orgInfo.value?.orgName) {
+    return orgInfo.value.orgName
+  }
+  return '机构首页'
+})
 
 // 定时刷新定时器
 let refreshTimer = null
@@ -403,6 +415,11 @@ const handleCreatePet = () => {
 // 返回普通用户首页
 const goToHome = () => {
   router.push('/home')
+}
+
+// 前往机构设置页面
+const goToOrgProfile = () => {
+  router.push('/org/profile')
 }
 
 // 快捷操作处理
