@@ -129,25 +129,26 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { 
-  Refresh, Management, Document, Check, Clock, 
-  TrendCharts, PieChart, Collection, Operation, Phone, Download 
+import {
+  Refresh, Management, Document, Check, Clock,
+  TrendCharts, PieChart, Collection, Operation, Phone, Download
 } from '@element-plus/icons-vue'
 import PageHeader from '@/components/common/PageHeader.vue'
+import { orgAPI } from '@/api/modules/org.js'
 
 // ECharts 引入
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { PieChart as EPieChart, BarChart as EBarChart } from 'echarts/charts'
-import { 
-  TitleComponent, TooltipComponent, LegendComponent, 
-  GridComponent, DatasetComponent 
+import {
+  TitleComponent, TooltipComponent, LegendComponent,
+  GridComponent, DatasetComponent
 } from 'echarts/components'
 import VChart from 'vue-echarts'
 
 // 注册 ECharts 组件
 use([
-  CanvasRenderer, EPieChart, EBarChart, 
+  CanvasRenderer, EPieChart, EBarChart,
   TitleComponent, TooltipComponent, LegendComponent, GridComponent, DatasetComponent
 ])
 
@@ -160,12 +161,14 @@ const statistics = ref({
   pendingApplications: 0,
   monthlyAdoptions: 0,
   pendingFollowups: 0,
+  totalAdoptions: 0,
   publishedPets: 0,
   draftPets: 0,
   underReviewPets: 0,
-  catCount: 45, // 模拟数据
-  dogCount: 32, // 模拟数据
-  otherCount: 12 // 模拟数据
+  catCount: 0,
+  dogCount: 0,
+  otherCount: 0,
+  adoptionTrend: []
 })
 
 // --- 图表配置项 ---
@@ -183,7 +186,7 @@ const statusPieOption = computed(() => ({
       avoidLabelOverlap: false,
       itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
       label: { show: false },
-      data: [
+       [
         { value: statistics.value.publishedPets, name: '已发布' },
         { value: statistics.value.draftPets, name: '草稿' },
         { value: statistics.value.underReviewPets, name: '审核中' }
@@ -193,34 +196,40 @@ const statusPieOption = computed(() => ({
 }))
 
 // 2. 领养趋势直方图
-const adoptionTrendOption = computed(() => ({
-  grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-  tooltip: { trigger: 'axis' },
-  xAxis: {
-    type: 'category',
-    data: ['9月', '10月', '11月', '12月', '1月', '2月'],
-    axisLine: { lineStyle: { color: '#eee' } },
-    axisLabel: { color: '#999' }
-  },
-  yAxis: { 
-    type: 'value',
-    splitLine: { lineStyle: { type: 'dashed', color: '#f5f5f5' } }
-  },
-  series: [
-    {
-      data: [12, 19, 15, 22, 30, 25],
-      type: 'bar',
-      barWidth: '40%',
-      itemStyle: {
-        color: {
-          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-          colorStops: [{ offset: 0, color: '#409EFF' }, { offset: 1, color: '#79bbff' }]
-        },
-        borderRadius: [5, 5, 0, 0]
+const adoptionTrendOption = computed(() => {
+  const trend = statistics.value.adoptionTrend || []
+  const months = trend.map(item => item.month || '')
+  const counts = trend.map(item => item.count || 0)
+
+  return {
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    tooltip: { trigger: 'axis' },
+    xAxis: {
+      type: 'category',
+       months,
+      axisLine: { lineStyle: { color: '#eee' } },
+      axisLabel: { color: '#999' }
+    },
+    yAxis: {
+      type: 'value',
+      splitLine: { lineStyle: { type: 'dashed', color: '#f5f5f5' } }
+    },
+    series: [
+      {
+         counts,
+        type: 'bar',
+        barWidth: '40%',
+        itemStyle: {
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [{ offset: 0, color: '#409EFF' }, { offset: 1, color: '#79bbff' }]
+          },
+          borderRadius: [5, 5, 0, 0]
+        }
       }
-    }
-  ]
-}))
+    ]
+  }
+})
 
 // 3. 物种分布饼图
 const speciesPieOption = computed(() => ({
@@ -229,7 +238,7 @@ const speciesPieOption = computed(() => ({
     {
       type: 'pie',
       radius: '60%',
-      data: [
+       [
         { value: statistics.value.catCount, name: '猫咪' },
         { value: statistics.value.dogCount, name: '狗狗' },
         { value: statistics.value.otherCount, name: '其他' }
@@ -244,21 +253,25 @@ const speciesPieOption = computed(() => ({
 const fetchStatistics = async () => {
   try {
     loading.value = true
-    // const response = await orgAPI.getDashboardStatistics()
-    // 模拟数据填充以便预览
-    statistics.value = {
-      totalPets: 89,
-      pendingApplications: 12,
-      monthlyAdoptions: 25,
-      pendingFollowups: 8,
-      publishedPets: 60,
-      draftPets: 15,
-      underReviewPets: 14,
-      catCount: 45,
-      dogCount: 32,
-      otherCount: 12
+    const response = await orgAPI.getDashboardStatistics()
+    if (response && response.data) {
+      statistics.value = {
+        totalPets: response.data.totalPets || 0,
+        pendingApplications: response.data.pendingApplications || 0,
+        monthlyAdoptions: response.data.monthlyAdoptions || 0,
+        pendingFollowups: response.data.pendingFollowups || 0,
+        totalAdoptions: response.data.totalAdoptions || 0,
+        publishedPets: response.data.publishedPets || 0,
+        draftPets: response.data.draftPets || 0,
+        underReviewPets: response.data.underReviewPets || 0,
+        catCount: response.data.catCount || 0,
+        dogCount: response.data.dogCount || 0,
+        otherCount: response.data.otherCount || 0,
+        adoptionTrend: response.data.adoptionTrend || []
+      }
     }
   } catch (error) {
+    console.error('获取统计数据失败:', error)
     ElMessage.error('获取统计数据失败')
   } finally {
     loading.value = false
@@ -354,7 +367,7 @@ onMounted(() => fetchStatistics())
   .nav-item {
     display: flex; flex-direction: column; align-items: center;
     cursor: pointer; transition: 0.3s;
-    
+
     &:hover {
       .nav-icon { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
       span { color: #409eff; }
@@ -366,13 +379,13 @@ onMounted(() => fetchStatistics())
       display: flex; align-items: center; justify-content: center;
       font-size: 24px; margin-bottom: 12px;
       transition: 0.3s;
-      
+
       &.p-color { background: #ecf5ff; color: #409eff; }
       &.w-color { background: #fdf6ec; color: #e6a23c; }
       &.s-color { background: #f0f9eb; color: #67c23a; }
       &.i-color { background: #f4f4f5; color: #909399; }
     }
-    
+
     span { font-size: 14px; color: #606266; font-weight: 500; }
   }
 }

@@ -20,9 +20,8 @@
             <el-form-item label="回访状态">
               <el-select v-model="filterForm.status" placeholder="全部状态" clearable style="width: 120px">
                 <el-option label="全部" value="" />
-                <el-option label="待回访" value="WAITING" />
-                <el-option label="已超期" value="OVERDUE" />
-                <el-option label="已回访" value="COMPLETED" />
+                <el-option label="已超期" value="overdue" />
+                <el-option label="即将到期" value="soon" />
               </el-select>
             </el-form-item>
             <el-form-item>
@@ -165,7 +164,9 @@
               {{ getStatusText(currentDetail.followupStatus) }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="已领养天数">{{ currentDetail.daysSinceAdoption }}天</el-descriptions-item>
+          <el-descriptions-item label="超期天数">{{ currentDetail.overdueDays || 0 }}天</el-descriptions-item>
+          <el-descriptions-item label="下次回访日期">{{ formatDate(currentDetail.nextFollowupDate) }}</el-descriptions-item>
+          <el-descriptions-item label="上次回访时间">{{ formatDate(currentDetail.lastFollowupTime) }}</el-descriptions-item>
         </el-descriptions>
         
         <div v-if="checkinList.length > 0" class="checkin-section">
@@ -198,9 +199,7 @@ import { ElMessage } from 'element-plus'
 import { Refresh, Search, RefreshLeft, Phone, Picture } from '@element-plus/icons-vue'
 
 import PageHeader from '@/components/common/PageHeader.vue'
-import http from '@/api/request.js'
-
-// 使用统一请求封装
+import { orgAPI } from '@/api/modules/org.js'
 
 // 响应式数据
 const loading = ref(false)
@@ -221,62 +220,50 @@ const pagination = reactive({
   total: 0
 })
 
-// 获取已领养宠物列表
+// 获取回访提醒列表
 const fetchAdoptedPets = async () => {
   try {
     loading.value = true
-      const response = await http.get('/org/adoptions', {
-        params: {
-          pageNo: pagination.currentPage,
-          pageSize: pagination.pageSize,
-          status: 'APPROVED' // 只获取已批准的领养记录
-        }
-      })
-    
-      if (response.code === 10000) {
-        const records = response.data?.list || []
-        adoptedList.value = records.map(item => ({
-          ...item,
-          followupStatus: calculateFollowupStatus(item),
-          daysSinceAdoption: item.daysSinceAdoption || calculateDaysSinceAdoption(item.adoptedTime)
-        }))
-        pagination.total = response.data?.total || 0
-      } else {
-        ElMessage.error(response.message || '获取领养记录失败')
+
+    // 调用回访提醒API
+    const response = await orgAPI.getFollowupReminders({
+      status: filterForm.status || 'all',
+      limit: 100 // 获取足够多的数据用于分页
+    })
+
+    if (response && response.data) {
+      const records = response.data.list || []
+
+      // 根据状态筛选
+      let filteredRecords = records
+      if (filterForm.status) {
+        filteredRecords = records.filter(item => item.status === filterForm.status.toLowerCase())
       }
+
+      // 映射数据格式
+      adoptedList.value = filteredRecords.map(item => ({
+        id: item.id,
+        petId: item.petId,
+        petName: item.petName,
+        petCoverUrl: item.petCoverUrl,
+        userName: item.userName,
+        userPhone: item.userPhone,
+        adoptedTime: item.adoptedTime,
+        followupStatus: item.status?.toUpperCase() || 'WAITING',
+        daysSinceAdoption: item.overdueDays || 0,
+        nextFollowupDate: item.nextFollowupDate,
+        lastFollowupTime: item.lastFollowupTime,
+        overdueDays: item.overdueDays || 0
+      }))
+
+      pagination.total = adoptedList.value.length
+    }
   } catch (error) {
-    console.error('获取领养记录失败:', error)
-    ElMessage.error('获取领养记录失败，请稍后重试')
+    console.error('获取回访提醒失败:', error)
+    ElMessage.error('获取回访提醒失败，请稍后重试')
   } finally {
     loading.value = false
   }
-}
-
-// 计算回访状态
-const calculateFollowupStatus = (item) => {
-  const adoptedDate = new Date(item.adoptedTime)
-  const now = new Date()
-  const daysSinceAdoption = Math.floor((now - adoptedDate) / (1000 * 60 * 60 * 24))
-  
-  if (daysSinceAdoption < 30) {
-    return 'WAITING'
-  } else if (daysSinceAdoption < 35) {
-    return 'UPCOMING'
-  } else if (daysSinceAdoption < 90) {
-    return 'OVERDUE'
-  } else {
-    const cycle = Math.floor(daysSinceAdoption / 90)
-    const nextFollowup = cycle * 90 + 30
-    const daysUntilNext = nextFollowup - daysSinceAdoption
-    return daysUntilNext <= 5 ? 'UPCOMING' : 'OVERDUE'
-  }
-}
-
-// 计算领养天数
-const calculateDaysSinceAdoption = (adoptedTime) => {
-  const adoptedDate = new Date(adoptedTime)
-  const now = new Date()
-  return Math.floor((now - adoptedDate) / (1000 * 60 * 60 * 24))
 }
 
 // 格式化日期
@@ -287,37 +274,35 @@ const formatDate = (dateStr) => {
 
 // 获取状态类型
 const getStatusType = (status) => {
-  switch (status) {
-    case 'WAITING': return 'info'
-    case 'UPCOMING': return 'warning'
-    case 'OVERDUE': return 'danger'
-    default: return 'success'
+  switch (status?.toLowerCase()) {
+    case 'overdue': return 'danger'
+    case 'soon': return 'warning'
+    case 'normal': return 'info'
+    default: return 'info'
   }
 }
 
 // 获取状态文本
 const getStatusText = (status) => {
-  switch (status) {
-    case 'WAITING': return '待回访'
-    case 'UPCOMING': return '即将到期'
-    case 'OVERDUE': return '已超期'
-    default: return '已回访'
+  switch (status?.toLowerCase()) {
+    case 'overdue': return '已超期'
+    case 'soon': return '即将到期'
+    case 'normal': return '正常'
+    default: return '待回访'
   }
 }
 
 // 获取天数信息
 const getDaysInfo = (row) => {
-  const days = row.daysSinceAdoption
-  if (days < 30) {
-    return `还有${30 - days}天`
-  } else if (days < 90) {
-    return `超期${days - 30}天`
-  } else {
-    const cycle = Math.floor(days / 90)
-    const nextFollowup = cycle * 90 + 30
-    const daysUntilNext = nextFollowup - days
-    return daysUntilNext > 0 ? `还有${daysUntilNext}天` : `超期${Math.abs(daysUntilNext)}天`
+  if (row.overdueDays > 0) {
+    return `已超期${row.overdueDays}天`
+  } else if (row.nextFollowupDate) {
+    const nextDate = new Date(row.nextFollowupDate)
+    const now = new Date()
+    const daysLeft = Math.ceil((nextDate - now) / (1000 * 60 * 60 * 24))
+    return daysLeft > 0 ? `还有${daysLeft}天` : '已到期'
   }
+  return '-'
 }
 
 // 搜索
