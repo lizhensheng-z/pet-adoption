@@ -24,26 +24,38 @@
           <el-col :xs="24" :sm="16" :md="18">
             <div class="filter-actions">
               <el-button-group>
-                <el-button 
+                <el-button
                   :type="filters.category === 'cat' ? 'primary' : 'default'"
-                  @click="filters.category = 'cat'"
+                  @click="handleCategoryChange('cat')"
                 >
                   猫咪
                 </el-button>
-                <el-button 
+                <el-button
                   :type="filters.category === 'dog' ? 'primary' : 'default'"
-                  @click="filters.category = 'dog'"
+                  @click="handleCategoryChange('dog')"
                 >
                   狗狗
                 </el-button>
-                <el-button 
+                <el-button
                   :type="filters.category === 'other' ? 'primary' : 'default'"
-                  @click="filters.category = 'other'"
+                  @click="handleCategoryChange('other')"
                 >
                   其他
                 </el-button>
+                <el-button
+                  :type="filters.category === 'nearby' ? 'primary' : 'default'"
+                  @click="handleCategoryChange('nearby')"
+                >
+                  附近
+                </el-button>
+                <el-button
+                  :type="filters.category === 'young' ? 'primary' : 'default'"
+                  @click="handleCategoryChange('young')"
+                >
+                  幼宠
+                </el-button>
               </el-button-group>
-              
+
               <el-button @click="showAdvancedFilter = true">
                 <el-icon><Filter /></el-icon>
                 筛选
@@ -58,7 +70,14 @@
     <div class="pet-list-section">
       <div class="page-container">
         <div class="list-header">
-          <span class="result-count">共找到 {{ total }} 只宠物</span>
+          <span class="result-count">
+            共找到 {{ total }} 只宠物
+            <span v-if="filters.category === 'nearby'" class="filter-tag">（按距离排序）</span>
+            <span v-else-if="filters.category === 'young'" class="filter-tag">（按年龄升序）</span>
+            <span v-else-if="filters.category === 'cat'" class="filter-tag">（猫咪）</span>
+            <span v-else-if="filters.category === 'dog'" class="filter-tag">（狗狗）</span>
+            <span v-else-if="filters.category === 'other'" class="filter-tag">（其他）</span>
+          </span>
           <el-radio-group v-model="viewMode" size="small">
             <el-radio-button label="grid">
               <el-icon><Grid /></el-icon>
@@ -210,13 +229,17 @@ const showAdvancedFilter = ref(false)
 
 const filters = reactive({
   keyword: '',
-  category: '', // cat/dog/other
+  category: '', // cat/dog/other/nearby/young
   gender: '', // male/female
   age: '', // young(1岁以下)/adult(1-5岁)/senior(5岁以上)
   vaccinated: '', // true/false
   neutered: '', // true/false
   dewormed: '', // true/false
-  size: '' // S/M/L
+  size: '', // S/M/L
+  sortBy: '', // distance/age_month/published_time
+  order: '', // asc/desc
+  lng: null, // 用户经度
+  lat: null  // 用户纬度
 })
 
 const pagination = reactive({
@@ -235,6 +258,71 @@ const formatAge = (age) => {
 const handleSearch = () => {
   pagination.page = 1
   loadPetList()
+}
+
+// 处理分类切换
+const handleCategoryChange = async (category) => {
+  filters.category = category
+  filters.sortBy = 'published_time'
+  filters.order = 'desc'
+  filters.lng = null
+  filters.lat = null
+
+  // 附近：按距离排序
+  if (category === 'nearby') {
+    // 尝试获取用户位置
+    if (appStore.location && appStore.location.latitude && appStore.location.longitude) {
+      filters.lng = appStore.location.longitude
+      filters.lat = appStore.location.latitude
+      filters.sortBy = 'distance'
+    } else {
+      try {
+        const position = await getUserLocation()
+        filters.lng = position.lng
+        filters.lat = position.lat
+        filters.sortBy = 'distance'
+      } catch (error) {
+        ElMessage.warning('无法获取您的位置，请开启定位权限')
+        return
+      }
+    }
+  }
+
+  // 幼宠：按年龄升序
+  if (category === 'young') {
+    filters.sortBy = 'age_month'
+    filters.order = 'asc'
+  }
+
+  pagination.page = 1
+  loadPetList()
+}
+
+// 获取用户位置
+const getUserLocation = () => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('浏览器不支持定位'))
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        })
+      },
+      (error) => {
+        reject(error)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    )
+  })
 }
 
 const handleFilterConfirm = () => {
@@ -284,8 +372,11 @@ const loadPetList = async () => {
       // 关键词搜索
       keyword: filters.keyword || undefined,
 
-      // 筛选条件
-      species: filters.category === 'cat' ? 'CAT' : filters.category === 'dog' ? 'DOG' : filters.category === 'other' ? 'OTHER' : undefined,
+      // 筛选条件 - nearby 和 young 不需要物种筛选
+      species: filters.category === 'cat' ? 'CAT'
+             : filters.category === 'dog' ? 'DOG'
+             : filters.category === 'other' ? 'OTHER'
+             : undefined,
       gender: filters.gender === 'male' ? 'MALE' : filters.gender === 'female' ? 'FEMALE' : undefined,
 
       // 年龄范围转换
@@ -304,15 +395,22 @@ const loadPetList = async () => {
       page: pagination.page,
       pageSize: pagination.pageSize,
 
-      // 排序（按发布时间降序）
-      sortBy: 'published_time',
-      sortOrder: 'desc'
+      // 排序参数
+      sortBy: filters.sortBy || 'published_time',
+      order: filters.order || 'desc',
+
+      // 用户位置（用于距离计算和排序）
+      lng: filters.lng,
+      lat: filters.lat
     }
 
 // 如果有用户位置信息，添加用于距离计算
     if (appStore.location && appStore.location.latitude && appStore.location.longitude) {
-      params.lat = appStore.location.latitude
-      params.lng = appStore.location.longitude
+      // 如果没有通过筛选条件传入位置，使用store中的位置
+      if (!params.lng) {
+        params.lng = appStore.location.longitude
+        params.lat = appStore.location.latitude
+      }
     }
 
     console.log('请求宠物列表参数:', params)
@@ -377,7 +475,21 @@ onMounted(() => {
   if (route.query.category) {
     filters.category = route.query.category
   }
-  
+  // 解析排序参数
+  if (route.query.sortBy) {
+    filters.sortBy = route.query.sortBy
+  }
+  if (route.query.order) {
+    filters.order = route.query.order
+  }
+  // 解析位置参数（用于附近功能）
+  if (route.query.lng) {
+    filters.lng = parseFloat(route.query.lng)
+  }
+  if (route.query.lat) {
+    filters.lat = parseFloat(route.query.lat)
+  }
+
   loadPetList()
 })
 </script>
@@ -412,6 +524,11 @@ onMounted(() => {
 .result-count {
   color: var(--text-regular);
   font-size: var(--font-size-sm);
+}
+
+.filter-tag {
+  color: var(--primary-color);
+  font-weight: 500;
 }
 
 .pet-content {

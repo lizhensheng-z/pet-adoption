@@ -124,7 +124,6 @@ const categories = [
   { key: 'dog', name: '狗狗', icon: 'Star', color: '#87CEEB' },
   { key: 'other', name: '其他', icon: 'MoreFilled', color: '#98FB98' },
   { key: 'nearby', name: '附近', icon: 'Compass', color: '#DDA0DD' },
-  { key: 'urgent', name: '急寻', icon: 'Clock', color: '#F0E68C' },
   { key: 'young', name: '幼宠', icon: 'Folder', color: '#FFE4B5' }
 ]
 
@@ -146,10 +145,66 @@ const goToAdminHome = () => {
   router.push('/admin')
 }
 
-const handleCategoryClick = (category) => {
+const handleCategoryClick = async (category) => {
+  const query = { category: category.key }
+
+  // 附近：按距离排序，需要用户位置
+  if (category.key === 'nearby') {
+    // 尝试获取用户位置
+    if (appStore.location && appStore.location.latitude && appStore.location.longitude) {
+      query.lng = appStore.location.longitude
+      query.lat = appStore.location.latitude
+      query.sortBy = 'distance'
+    } else {
+      // 尝试获取浏览器位置
+      try {
+        const position = await getUserLocation()
+        query.lng = position.lng
+        query.lat = position.lat
+        query.sortBy = 'distance'
+      } catch (error) {
+        ElMessage.warning('无法获取您的位置，请开启定位权限')
+        return
+      }
+    }
+  }
+
+  // 幼宠：按年龄升序
+  if (category.key === 'young') {
+    query.sortBy = 'age_month'
+    query.order = 'asc'
+  }
+
   router.push({
     path: '/pets',
-    query: { category: category.key }
+    query
+  })
+}
+
+// 获取用户位置
+const getUserLocation = () => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('浏览器不支持定位'))
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        })
+      },
+      (error) => {
+        reject(error)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    )
   })
 }
 
