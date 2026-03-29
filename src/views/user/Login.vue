@@ -13,12 +13,12 @@
 
       <div class="auth-card">
         <el-form :model="form" :rules="rules" ref="formRef">
-          <!-- 用户名 -->
+          <!-- 手机号 -->
           <div class="custom-input-item">
-            <span class="input-label">账号</span>
-            <el-input 
-              v-model="form.username" 
-              placeholder="请输入用户名或邮箱"
+            <span class="input-label">手机号</span>
+            <el-input
+              v-model="form.phone"
+              placeholder="请输入手机号"
               prefix-icon="User"
             />
           </div>
@@ -81,12 +81,12 @@ const authStore = useAuthStore()
 const formRef = ref(null)
 const loading = ref(false)
 const form = ref({
-  username: '',
+  phone: '',
   password: ''
 })
 
 const rules = {
-  username: [{ required: true, message: '请输入账号', trigger: 'blur' }],
+  phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 

@@ -19,9 +19,9 @@
  */
 export interface LoginRequest {
     /**
-     * 用户名
+     * 手机号
      */
-    'username': string;
+    'phone': string;
     /**
      * 密码
      */
