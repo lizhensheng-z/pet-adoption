@@ -66,6 +66,12 @@ export default [
     meta: { requiresAuth: true, title: '个人资料' }
   },
   {
+    path: '/settings',
+    name: 'Settings',
+    component: () => import('@/views/user/Settings.vue'),
+    meta: { requiresAuth: true, title: '个人设置' }
+  },
+  {
     path: '/preference',
     name: 'Preference',
     component: () => import('@/views/user/Preference.vue'),
