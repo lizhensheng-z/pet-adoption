@@ -11,6 +11,7 @@ import router from './router'
 import './styles/variables.scss'
 import './styles/common.scss'
 import './styles/element-plus.scss'
+import 'highlight.js/styles/github-dark.css'
 
 const app = createApp(App)
 const pinia = createPinia()

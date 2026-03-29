@@ -94,8 +94,7 @@
                   </div>
                 </div>
                 <div class="org-btns">
-                  <el-button type="success" size="small" @click="handleAuditOrg(org.id, 'approve')" round>通过</el-button>
-                  <el-button type="danger" size="small" plain @click="handleAuditOrg(org.id, 'reject')" round>拒绝</el-button>
+                  <el-button type="primary" size="small" plain @click="viewOrgDetail(org)" round>查看详情</el-button>
                 </div>
               </div>
             </div>
@@ -115,6 +114,69 @@
         </el-col>
       </el-row>
     </div>
+
+    <!-- 机构详情审核弹窗 -->
+    <el-dialog
+      v-model="orgDetailVisible"
+      title="机构详情审核"
+      width="600px"
+      destroy-on-close
+    >
+      <div v-if="orgDetailLoading" class="detail-loading">
+        <el-skeleton :rows="6" animated />
+      </div>
+      <div v-else-if="currentOrgDetail" class="org-detail-content">
+        <!-- 基本信息 -->
+        <div class="detail-section">
+          <h4 class="section-title">基本信息</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="label">机构名称：</span>
+              <span class="value">{{ currentOrgDetail.orgName }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">资质登记号：</span>
+              <span class="value">{{ currentOrgDetail.licenseNo || '未填写' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">联系人：</span>
+              <span class="value">{{ currentOrgDetail.contactName }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">联系电话：</span>
+              <span class="value">{{ currentOrgDetail.contactPhone }}</span>
+            </div>
+            <div class="detail-item full-width">
+              <span class="label">详细地址：</span>
+              <span class="value">{{ formatAddress(currentOrgDetail) }}</span>
+            </div>
+            <div class="detail-item full-width">
+              <span class="label">申请时间：</span>
+              <span class="value">{{ currentOrgDetail.createTime }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 机构封面 -->
+        <div class="detail-section" v-if="currentOrgDetail.coverUrl">
+          <h4 class="section-title">机构封面</h4>
+          <el-image
+            :src="currentOrgDetail.coverUrl"
+            :preview-src-list="[currentOrgDetail.coverUrl]"
+            fit="cover"
+            class="org-cover"
+          />
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="orgDetailVisible = false">取消</el-button>
+          <el-button type="danger" plain @click="handleRejectOrg" :loading="auditLoading">拒绝</el-button>
+          <el-button type="success" @click="handleApproveOrg" :loading="auditLoading">通过审核</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -122,8 +184,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
-import { statsApi as adminAPI } from '@/api/modules/admin.js'
-import { ElMessage } from 'element-plus'
+import { statsApi as adminAPI, orgApi } from '@/api/modules/admin.js'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   User, OfficeBuilding, Files, Select, Bell, Collection, 
   Setting, House, Refresh, TrendCharts, PieChart, Document 
@@ -162,12 +224,18 @@ const quickNavs = [
   { name: '宠物审核', icon: 'Files', path: '/admin/pet-audits', color: '#E6A23C' },
   { name: '公告管理', icon: 'Bell', path: '/admin/notices', color: '#67C23A' },
   { name: '标签字典', icon: 'Collection', path: '/admin/tags', color: '#909399' },
-  { name: '系统配置', icon: 'Setting', path: '/admin/config', color: '#F56C6C' },
-  { name: '审计日志', icon: 'Document', path: '/admin/audit-logs', color: '#9C27B0' }
+  { name: '系统配置', icon: 'Setting', path: '/admin/config', color: '#F56C6C' }
 ]
 
 const pendingOrgs = ref([])
 const noticeSummary = ref({})
+
+// 机构详情弹窗相关
+const orgDetailVisible = ref(false)
+const orgDetailLoading = ref(false)
+const currentOrgDetail = ref(null)
+const currentOrgId = ref(null)
+const auditLoading = ref(false)
 
 // 图表配置
 const growthChartOption = ref({
@@ -237,35 +305,75 @@ const distributionChartOption = ref({
 const formatTime = (t) => new Date(t).toLocaleDateString()
 const goToUserHome = () => router.push('/home')
 
-const handleAuditOrg = async (id, action) => {
+// 格式化地址
+const formatAddress = (org) => {
+  const parts = [org.province, org.city, org.district, org.address].filter(Boolean)
+  return parts.join(' ') || '未填写'
+}
+
+// 查看机构详情
+const viewOrgDetail = async (org) => {
+  currentOrgId.value = org.id || org.userId
+  orgDetailVisible.value = true
+  orgDetailLoading.value = true
+  currentOrgDetail.value = null
+
   try {
-    let reason = '资料完整，符合要求'
+    const res = await orgApi.getOrgDetail(currentOrgId.value)
+    currentOrgDetail.value = res.data
+  } catch (error) {
+    ElMessage.error('获取机构详情失败')
+    console.error('获取机构详情失败:', error)
+    orgDetailVisible.value = false
+  } finally {
+    orgDetailLoading.value = false
+  }
+}
 
-    if (action === 'reject') {
-      const { value } = await ElMessageBox.prompt('请输入拒绝原因：', '审核拒绝', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        inputPattern: /\S+/,
-        inputErrorMessage: '拒绝原因不能为空'
-      })
-      reason = value
-    }
-
-    await adminAPI.auditOrganization(id, {
-      action,
-      reason
+// 通过审核
+const handleApproveOrg = async () => {
+  auditLoading.value = true
+  try {
+    await adminAPI.auditOrganization(currentOrgId.value, {
+      action: 'approve',
+      reason: '资料完整，符合要求'
     })
-
-    ElMessage.success(action === 'approve' ? '审核通过' : '已拒绝')
-
-    // 重新加载数据
+    ElMessage.success('审核通过')
+    orgDetailVisible.value = false
     await loadDashboardData()
   } catch (error) {
-    // 用户取消操作
+    ElMessage.error('审核操作失败')
+    console.error('审核失败:', error)
+  } finally {
+    auditLoading.value = false
+  }
+}
+
+// 拒绝审核
+const handleRejectOrg = async () => {
+  try {
+    const { value } = await ElMessageBox.prompt('请输入拒绝原因：', '审核拒绝', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      inputPattern: /\S+/,
+      inputErrorMessage: '拒绝原因不能为空'
+    })
+
+    auditLoading.value = true
+    await adminAPI.auditOrganization(currentOrgId.value, {
+      action: 'reject',
+      reason: value
+    })
+    ElMessage.success('已拒绝')
+    orgDetailVisible.value = false
+    await loadDashboardData()
+  } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('审核操作失败')
       console.error('审核失败:', error)
     }
+  } finally {
+    auditLoading.value = false
   }
 }
 
@@ -496,5 +604,63 @@ onMounted(() => {
 @media (max-width: 768px) {
   .quick-nav-grid { grid-template-columns: 1fr 1fr; }
   .stat-container { grid-template-columns: 1fr 1fr; }
+}
+
+/* 机构详情弹窗样式 */
+.detail-loading {
+  padding: 20px;
+}
+
+.org-detail-content {
+  .detail-section {
+    margin-bottom: 24px;
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #303133;
+      margin: 0 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #ebeef5;
+    }
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+
+    .detail-item {
+      display: flex;
+      align-items: flex-start;
+
+      .label {
+        color: #909399;
+        min-width: 80px;
+        flex-shrink: 0;
+      }
+
+      .value {
+        color: #303133;
+        word-break: break-all;
+      }
+
+      &.full-width {
+        grid-column: 1 / -1;
+      }
+    }
+  }
+
+  .org-cover {
+    width: 100%;
+    max-height: 200px;
+    border-radius: 8px;
+  }
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 </style>

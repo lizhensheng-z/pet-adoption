@@ -104,7 +104,7 @@ export const OrgApplicationStatusColor = {
 export const StatusTransitionRules = {
   [OrgApplicationStatus.SUBMITTED]: ['UNDER_REVIEW', 'REJECTED'],
   [OrgApplicationStatus.UNDER_REVIEW]: ['INTERVIEW', 'REJECTED'],
-  [OrgApplicationStatus.INTERVIEW]: ['HOME_VISIT', 'REJECTED'],
+  [OrgApplicationStatus.INTERVIEW]: ['HOME_VISIT', 'APPROVED', 'REJECTED'],
   [OrgApplicationStatus.HOME_VISIT]: ['APPROVED', 'REJECTED'],
   [OrgApplicationStatus.APPROVED]: [],
   [OrgApplicationStatus.REJECTED]: [],

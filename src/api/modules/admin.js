@@ -125,17 +125,17 @@ export const petAuditApi = {
 // 机构管理相关API
 export const orgApi = {
   // 获取机构列表
-  getOrgList: (params) => http.get('/admin/orgs', params),
-  
-  // 获取机构详情
-  getOrgDetail: (id) => http.get(`/admin/orgs/${id}`),
-  
+  getOrgList: (params) => http.get('/admin/organizations', params),
+
+  // 获取机构详情（管理员查看）
+  getOrgDetail: (id) => http.get(`/admin/organizations/${id}`),
+
   // 审核机构
-  auditOrg: (id, data) => http.post(`/admin/orgs/${id}/audit`, data),
-  
+  auditOrg: (id, data) => http.post(`/admin/organizations/${id}/audit`, data),
+
   // 更新机构状态
-  updateOrgStatus: (id, status) => 
-    http.patch(`/admin/orgs/${id}/status`, { status })
+  updateOrgStatus: (id, status) =>
+    http.patch(`/admin/organizations/${id}/status`, { status })
 }
 
 // 数据统计相关API

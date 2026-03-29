@@ -250,11 +250,11 @@ const http = {
     return request({ method: 'PATCH', url, data, ...config })
   },
 
-  upload(url, formData, config = {}) {
+  upload(url, data, config = {}) {
     return request({
       method: 'POST',
       url,
-       formData,
+      data,
       headers: { 'Content-Type': 'multipart/form-data' },
       ...config
     })

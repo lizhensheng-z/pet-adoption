@@ -332,6 +332,7 @@ const availableActions = computed(() => {
     case 'INTERVIEW':
       actions.push(
         { value: 'HOME_VISIT', label: '安排家访' },
+        { value: 'APPROVED', label: '通过申请' },
         { value: 'REJECTED', label: '拒绝申请' }
       )
       break

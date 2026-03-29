@@ -46,11 +46,5 @@ export default [
     name: 'AdminNotices',
     component: () => import('@/views/admin/Notices.vue'),
     meta: { requiresAuth: true, permission: 'admin:notice:manage', title: '公告管理' }
-  },
-  {
-    path: '/admin/audit-logs',
-    name: 'AdminAuditLogs',
-    component: () => import('@/views/admin/AuditLogs.vue'),
-    meta: { requiresAuth: true, permission: 'admin:log:view', title: '审计日志' }
   }
 ]
