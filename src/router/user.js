@@ -96,15 +96,10 @@ export default [
     meta: { title: '公告详情' }
   },
   {
-    path: '/login',
-    name: 'Login',
-    component: () => import('@/views/user/Login.vue'),
-    meta: { title: '登录' }
-  },
-  {
-    path: '/register',
-    name: 'Register',
-    component: () => import('@/views/user/Register.vue'),
-    meta: { title: '注册' }
+    path: '/help',
+    name: 'Help',
+    component: () => import('@/views/user/Help.vue'),
+    meta: { title: '帮助与反馈' }
   }
+  // Login 和 Register 路由已在 index.js 中定义，此处移除重复定义
 ]

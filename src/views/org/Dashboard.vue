@@ -464,29 +464,7 @@ const stopAutoRefresh = () => {
 
 // 生命周期
 onMounted(async () => {
-  console.log('=== Dashboard 组件挂载 ===')
-  console.log('登录状态:', authStore.isLoggedIn)
-  console.log('当前用户:', authStore.user)
-  console.log('当前角色:', authStore.userRole)
-  console.log('权限列表:', authStore.permissions)
-  console.log('检查权限 org:access:', authStore.checkPermission('org:access'))
-
-  // 检查权限
-  if (!authStore.isLoggedIn) {
-    console.log('未登录，跳转到登录页')
-    router.push('/login')
-    return
-  }
-
-  if (!authStore.checkPermission('org:access')) {
-    console.log('无 org:access 权限，跳转到403页')
-    router.push('/403')
-    return
-  }
-
-  console.log('权限检查通过，开始加载首页数据...')
-
-  // 加载首页数据
+  // 权限检查已在路由守卫中完成，此处直接加载数据
   await loadDashboardData()
 
   // 启动定时刷新

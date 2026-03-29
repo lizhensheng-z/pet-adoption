@@ -21,6 +21,60 @@
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
 }
 
+/* ==================== 项目自定义变量 ==================== */
+:root {
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+
+  /* 主色调 */
+  --primary-color: #FF8C42;
+  --primary-color-light: #FFa266;
+  --primary-color-dark: #E67530;
+
+  /* 文字颜色 */
+  --text-primary: #303133;
+  --text-regular: #606266;
+  --text-secondary: #909399;
+  --text-placeholder: #C0C4CC;
+
+  /* 边框 */
+  --border-light: #E4E7ED;
+  --border-lighter: #EBEEF5;
+  --border-extra-light: #F2F6FC;
+  --border-radius-base: 4px;
+  --border-radius-large: 8px;
+  --border-radius-larger: 12px;
+
+  /* 背景 */
+  --bg-light: #F5F7FA;
+  --bg-color-base: #FFFFFF;
+  --bg-color-page: #F2F3F5;
+
+  /* 阴影 */
+  --shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  --shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+  --shadow-dark: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  /* 过渡 */
+  --transition-fast: 0.2s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* 字体大小 */
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-md: 15px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-xxl: 20px;
+}
+
 /* semantic color variables for this project */
 :root {
   --color-background: var(--vt-c-white);
@@ -47,6 +101,14 @@
 
     --color-heading: var(--vt-c-text-dark-1);
     --color-text: var(--vt-c-text-dark-2);
+
+    /* 深色模式变量 */
+    --text-primary: #E5EAF3;
+    --text-regular: #CFD3DC;
+    --text-secondary: #A3A6AD;
+    --bg-light: #1D1E1F;
+    --bg-color-base: #141414;
+    --border-light: #4C4D4F;
   }
 }
 

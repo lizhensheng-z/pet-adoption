@@ -107,7 +107,7 @@ const rules = {
 const handleRegister = async () => {
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
-  
+
   try {
     loading.value = true
     await authStore.register({
@@ -117,14 +117,11 @@ const handleRegister = async () => {
       password: form.value.password,
       role: form.value.role
     })
-    ElMessage.success('注册成功，请登录')
-    
-    // 注册成功后的处理
+
+    // 注册成功后的处理（authStore.register 中已有提示，此处不再重复）
     if (form.value.role === 'ORG') {
-      ElMessage.success('注册成功，请完善机构资料')
       router.push('/org/profile/complete')
     } else {
-      ElMessage.success('注册成功，请登录')
       router.push('/login')
     }
   } catch (error) {

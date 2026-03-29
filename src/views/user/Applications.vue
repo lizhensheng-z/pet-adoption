@@ -288,7 +288,9 @@ const contactOrganization = (application) => {
     }
   ).then(() => {
     window.location.href = `tel:${phone}`
-  }).catch(() => {})
+  }).catch(() => {
+    // 用户取消操作，无需额外处理
+  })
 }
 
 const goToPets = () => {

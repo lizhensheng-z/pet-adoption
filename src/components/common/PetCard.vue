@@ -92,12 +92,14 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
 import { Star, Picture, Location, OfficeBuilding } from '@element-plus/icons-vue'
 import { formatRelativeTime } from '@/utils/common.js'
 import { MapUtils } from '@/utils/map.js'
+import { toggleFavorite as toggleFavoriteAPI, checkFavoriteStatus } from '@/api/modules/favorite.js'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps({
   pet: {
@@ -123,10 +125,30 @@ const emit = defineEmits(['click', 'favorite-change'])
 const router = useRouter()
 const authStore = useAuthStore()
 
+// 收藏状态
+const favoriteStatus = ref(props.pet.isFavorited || false)
+
 // 计算属性
-const isFavorite = computed(() => {
-  // TODO: 从用户状态中获取收藏信息
-  return false
+const isFavorite = computed(() => favoriteStatus.value)
+
+// 初始化收藏状态
+onMounted(async () => {
+  // 如果宠物对象已包含收藏状态，直接使用
+  if (props.pet.isFavorited !== undefined) {
+    favoriteStatus.value = props.pet.isFavorited
+    return
+  }
+
+  // 否则从API获取（仅登录用户）
+  if (authStore.isLoggedIn && props.pet.id) {
+    try {
+      const { data } = await checkFavoriteStatus(props.pet.id)
+      favoriteStatus.value = data?.favorited || false
+    } catch (error) {
+      // 静默失败，不影响用户体验
+      console.warn('获取收藏状态失败:', error)
+    }
+  }
 })
 
 // 方法
@@ -144,10 +166,13 @@ const toggleFavorite = async () => {
   }
 
   try {
-    // TODO: 调用收藏API
-    emit('favorite-change', props.pet.id, !isFavorite.value)
+    const { data } = await toggleFavoriteAPI(props.pet.id)
+    favoriteStatus.value = data?.favorited ?? !favoriteStatus.value
+    emit('favorite-change', props.pet.id, favoriteStatus.value)
+    ElMessage.success(favoriteStatus.value ? '已收藏' : '已取消收藏')
   } catch (error) {
     console.error('切换收藏状态失败:', error)
+    ElMessage.error('操作失败，请稍后重试')
   }
 }
 

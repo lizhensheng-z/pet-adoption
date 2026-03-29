@@ -55,13 +55,13 @@ export const petAPI = {
  */
 export const applicationAPI = {
   submitApplication(data) {
-    return http.post('/applications', data)
+    return http.post('/adoption/applications', data)
   },
   getApplicationDetail(id) {
-    return http.get(`/applications/${id}`)
+    return http.get(`/adoption/applications/${id}`)
   },
   getMyApplications(params) {
-    return http.get('/applications/my', params)
+    return http.get('/adoption/applications/me', params)
   }
 }
 

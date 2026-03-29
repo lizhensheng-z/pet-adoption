@@ -51,11 +51,13 @@ export const useAppStore = defineStore('app', {
     // 切换侧边栏
     toggleSidebar() {
       this.sidebarCollapsed = !this.sidebarCollapsed
+      localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed.toString())
     },
 
     // 设置侧边栏状态
     setSidebarCollapsed(collapsed) {
       this.sidebarCollapsed = collapsed
+      localStorage.setItem('sidebarCollapsed', collapsed.toString())
     },
 
     // 切换主题
@@ -182,6 +184,12 @@ export const useAppStore = defineStore('app', {
       const savedPageSize = localStorage.getItem('pageSize')
       if (savedPageSize) {
         this.pageSize = parseInt(savedPageSize)
+      }
+
+      // 恢复侧边栏状态
+      const savedSidebarCollapsed = localStorage.getItem('sidebarCollapsed')
+      if (savedSidebarCollapsed !== null) {
+        this.sidebarCollapsed = savedSidebarCollapsed === 'true'
       }
 
       // 恢复位置信息

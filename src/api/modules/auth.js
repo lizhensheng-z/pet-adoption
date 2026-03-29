@@ -35,21 +35,6 @@ export const authAPI = {
 
 // 用户相关API
 export const userAPI = {
-  // 获取用户列表
-  getUsers(params) {
-    return http.get('/users', params)
-  },
-
-  // 获取用户详情
-  getUserDetail(id) {
-    return http.get(`/users/${id}`)
-  },
-
-  // 更新用户信息
-  updateUser(id, data) {
-    return http.put(`/users/${id}`, data)
-  },
-
   // 获取用户详细信息（含信用分、统计数据、徽章等）
   getUserProfile() {
     return http.get('/users/profile')

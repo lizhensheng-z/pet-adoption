@@ -24,12 +24,12 @@ export const orgAPI = {
 
   // 更新宠物信息
   updatePet(id, data) {
-    return http.put(`/pets/org/pets/${id}`, data)
+    return http.put(`/pets/org/${id}`, data)
   },
 
   // 删除宠物
   deletePet(id) {
-    return http.delete(`/pets/org/pets/${id}`)
+    return http.delete(`/pets/org/${id}`)
   },
 
 // 保存宠物媒体关联（不包含文件上传）

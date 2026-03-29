@@ -34,13 +34,12 @@ export const useUserStore = defineStore('user', {
   },
 
   actions: {
-// 获取用户详细信息（含信用分、统计数据、徽章等）
+    // 获取用户详细信息（含信用分、统计数据、徽章等）
     async getUserProfile() {
       try {
-        const response = await userAPI.getUserProfile()
-        // response 已经是拦截器处理后的 data 对象 {code, message, data}
-        this.userInfo = response.data
-        return response.data
+        const { data } = await userAPI.getUserProfile()
+        this.userInfo = data
+        return data
       } catch (error) {
         throw error
       }
@@ -78,10 +77,12 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    // 更新用户信息
+    // 更新用户信息（通过更新偏好设置接口）
     async updateUserInfo(userInfo) {
       try {
-        const { data } = await userAPI.updateUser(this.userInfo.id, userInfo)
+        // 用户信息更新应使用 authAPI.updateProfile
+        const { authAPI } = await import('@/api/modules/auth.js')
+        const { data } = await authAPI.updateProfile(userInfo)
         this.userInfo = { ...this.userInfo, ...data }
         return data
       } catch (error) {

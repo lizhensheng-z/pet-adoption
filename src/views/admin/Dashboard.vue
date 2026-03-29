@@ -239,24 +239,33 @@ const goToUserHome = () => router.push('/home')
 
 const handleAuditOrg = async (id, action) => {
   try {
-    const reason = action === 'reject' 
-      ? prompt('请输入拒绝原因：') 
-      : '资料完整，符合要求'
-    
-    if (action === 'reject' && !reason) return
-    
+    let reason = '资料完整，符合要求'
+
+    if (action === 'reject') {
+      const { value } = await ElMessageBox.prompt('请输入拒绝原因：', '审核拒绝', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPattern: /\S+/,
+        inputErrorMessage: '拒绝原因不能为空'
+      })
+      reason = value
+    }
+
     await adminAPI.auditOrganization(id, {
       action,
       reason
     })
-    
+
     ElMessage.success(action === 'approve' ? '审核通过' : '已拒绝')
-    
+
     // 重新加载数据
     await loadDashboardData()
   } catch (error) {
-    ElMessage.error('审核操作失败')
-    console.error('审核失败:', error)
+    // 用户取消操作
+    if (error !== 'cancel') {
+      ElMessage.error('审核操作失败')
+      console.error('审核失败:', error)
+    }
   }
 }
 
@@ -337,10 +346,7 @@ const loadDashboardData = async () => {
 }
 
 onMounted(() => {
-  if (!authStore.isLoggedIn || !authStore.hasPermission('admin:dashboard:view')) {
-    router.push('/login')
-    return
-  }
+  // 权限检查已在路由守卫中完成，此处直接加载数据
   loadDashboardData()
 })
 </script>

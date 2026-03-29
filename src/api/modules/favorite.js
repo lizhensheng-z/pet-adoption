@@ -48,7 +48,7 @@ export const toggleFavorite = (petId) => {
  * @returns {Promise} 返回Promise对象
  */
 export const checkFavoriteStatus = (petId) => {
-  return http.get('/favorites/check', { petId })
+  return http.get(`/favorites/check/${petId}`)
 }
 
 /**

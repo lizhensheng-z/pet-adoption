@@ -12,12 +12,32 @@ import {
   getUserRoleFromToken 
 } from '@/utils/auth.js'
 
+// 从 localStorage 恢复用户信息
+const getStoredUser = () => {
+  try {
+    const stored = localStorage.getItem('user')
+    return stored ? JSON.parse(stored) : null
+  } catch {
+    return null
+  }
+}
+
+// 从 localStorage 恢复权限信息
+const getStoredPermissions = () => {
+  try {
+    const stored = localStorage.getItem('permissions')
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     token: getAccessToken(),
     refreshToken: getRefreshToken(),
-    user: null,
-    permissions: [],
+    user: getStoredUser(),
+    permissions: getStoredPermissions(),
     isLoading: false
   }),
 
@@ -93,11 +113,15 @@ export const useAuthStore = defineStore('auth', {
 
         // 转换权限格式：将 ROLE_ORG, ROLE_ADMIN 等转换为具体的权限列表
         this.permissions = this.convertPermissions(user.permissions || user.authorities || [])
-        
+
         // 确保管理员拥有所有权限
         if (user.role === 'ADMIN' || user.role === 'ROLE_ADMIN') {
           this.permissions = ['*']
         }
+
+        // 持久化用户信息和权限到 localStorage
+        localStorage.setItem('user', JSON.stringify(this.user))
+        localStorage.setItem('permissions', JSON.stringify(this.permissions))
 
         console.log('登录成功，用户信息:', this.user)
         console.log('当前角色:', this.user?.role)
@@ -150,7 +174,11 @@ export const useAuthStore = defineStore('auth', {
         this.user = null
         this.permissions = []
         removeToken()
-        
+
+        // 清除持久化的用户信息和权限
+        localStorage.removeItem('user')
+        localStorage.removeItem('permissions')
+
         // 跳转到登录页
         window.location.href = '/login'
       }
@@ -184,6 +212,10 @@ export const useAuthStore = defineStore('auth', {
         }
         // 转换权限格式（ROLE_ORG -> 具体权限列表）
         this.permissions = this.convertPermissions(user.permissions || [])
+
+        // 持久化用户信息和权限到 localStorage
+        localStorage.setItem('user', JSON.stringify(this.user))
+        localStorage.setItem('permissions', JSON.stringify(this.permissions))
 
         console.log('用户信息更新成功:', this.user)
 
@@ -279,6 +311,9 @@ export const useAuthStore = defineStore('auth', {
         this.user = null
         this.permissions = []
         removeToken()
+        // 清除持久化的用户信息和权限
+        localStorage.removeItem('user')
+        localStorage.removeItem('permissions')
         throw new Error('Token expired')
       }
 
@@ -295,6 +330,9 @@ export const useAuthStore = defineStore('auth', {
           this.user = null
           this.permissions = []
           removeToken()
+          // 清除持久化的用户信息和权限
+          localStorage.removeItem('user')
+          localStorage.removeItem('permissions')
           throw error
         }
       } else if (this.token && this.user) {
