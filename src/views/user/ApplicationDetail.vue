@@ -65,6 +65,25 @@
           </div>
         </div>
 
+        <!-- 面谈安排 -->
+        <div class="section-card" v-if="application.interviewTime || application.interviewLocation">
+          <h3>面谈安排</h3>
+          <div class="info-grid">
+            <div class="info-item" v-if="application.interviewTime">
+              <label>面谈时间：</label>
+              <p class="highlight-text">{{ formatTime(application.interviewTime) }}</p>
+            </div>
+            <div class="info-item" v-if="application.interviewLocation">
+              <label>面谈地点：</label>
+              <p class="highlight-text">{{ application.interviewLocation }}</p>
+            </div>
+          </div>
+          <div class="interview-notice" v-if="application.status === 'INTERVIEW'">
+            <el-icon><InfoFilled /></el-icon>
+            <span>请按时前往指定地点参加面谈，如有问题请及时联系机构</span>
+          </div>
+        </div>
+
         <!-- 问卷回答 -->
         <div class="section-card" v-if="application.questionnaire">
           <h3>问卷回答</h3>
@@ -178,7 +197,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Picture } from '@element-plus/icons-vue'
+import { ArrowLeft, Picture, InfoFilled } from '@element-plus/icons-vue'
 import { getApplicationDetail, cancelApplication } from '@/api/modules/application'
 import { 
   ApplicationStatusMap, 
@@ -484,6 +503,27 @@ onMounted(() => {
           flex-shrink: 0;
         }
       }
+    }
+  }
+
+  .highlight-text {
+    color: var(--el-color-primary);
+    font-weight: 600;
+  }
+
+  .interview-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--el-color-primary-light-9);
+    border-radius: 8px;
+    color: var(--el-color-primary);
+    font-size: 14px;
+
+    .el-icon {
+      font-size: 18px;
     }
   }
 

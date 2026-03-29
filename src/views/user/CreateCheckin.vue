@@ -234,10 +234,7 @@ const uploadImage = async (file) => {
   if (!beforeUpload(file)) return
 
   try {
-      const uploadFormData = new FormData()
-      uploadFormData.append('file', file)
-      
-      const res = await uploadPetPhoto(uploadFormData, {
+      const res = await uploadPetPhoto(file, {
       onUploadProgress: (progressEvent) => {
         const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total)
         console.log(`上传进度: ${percent}%`)
