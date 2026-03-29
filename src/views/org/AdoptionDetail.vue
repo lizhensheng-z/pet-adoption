@@ -87,16 +87,6 @@
               </div>
             </div>
 
-            <!-- 申请理由卡片 -->
-            <div class="info-card">
-              <div class="card-header">
-                <h3>申请理由</h3>
-              </div>
-              <div class="application-reason">
-                {{ application.reason || '申请人未填写申请理由' }}
-              </div>
-            </div>
-
             <!-- 问卷回答卡片 -->
             <div class="info-card">
               <div class="card-header">
@@ -645,6 +635,25 @@ onMounted(() => {
       padding: 12px;
       background: var(--el-fill-color-lighter);
       border-radius: 4px;
+    }
+
+    .contact-info {
+      .info-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 12px;
+
+        .label {
+          color: var(--el-text-color-secondary);
+          margin-right: 8px;
+          min-width: 80px;
+        }
+
+        .value {
+          color: var(--el-text-color-primary);
+          flex: 1;
+        }
+      }
     }
 
     .questionnaire {

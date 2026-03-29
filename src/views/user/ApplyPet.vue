@@ -48,40 +48,6 @@
         class="apply-form"
         v-loading="loading"
       >
-        <!-- 申请信息 -->
-        <div class="form-section">
-          <h4>申请信息</h4>
-          <el-form-item label="申请理由" prop="reason">
-            <el-input
-              v-model="form.reason"
-              type="textarea"
-              :rows="4"
-              :maxlength="500"
-              show-word-limit
-              placeholder="请详细描述您为什么想领养这只宠物，以及您能为它提供什么样的生活环境..."
-            />
-          </el-form-item>
-
-          <el-form-item label="联系方式" prop="contactInfo">
-            <el-input
-              v-model="form.contactInfo"
-              placeholder="请输入手机号或微信号"
-              maxlength="50"
-            />
-          </el-form-item>
-
-          <el-form-item label="备注信息" prop="remarks">
-            <el-input
-              v-model="form.remarks"
-              type="textarea"
-              :rows="3"
-              :maxlength="200"
-              show-word-limit
-              placeholder="其他需要说明的情况（选填）"
-            />
-          </el-form-item>
-        </div>
-
         <!-- 领养问卷 -->
         <div class="form-section">
           <h4>领养问卷</h4>
@@ -182,9 +148,6 @@ const petInfo = ref(null)
 
 const form = reactive({
   petId: '',
-  reason: '',
-  contactInfo: '',
-  remarks: '',
   questionnaire: {
     housing: '',
     experience: '',
@@ -197,28 +160,6 @@ const form = reactive({
 })
 
 const rules = {
-  reason: [
-    { required: true, message: '请填写申请理由', trigger: 'blur' },
-    { min: 5, max: 500, message: '申请理由应在5-500字之间', trigger: 'blur' }
-  ],
-  contactInfo: [
-    { required: true, message: '请填写联系方式', trigger: 'blur' },
-    { 
-      validator: (rule, value, callback) => {
-        const phoneRegex = /^1[3-9]\d{9}$/
-        const wechatRegex = /^[a-zA-Z][a-zA-Z0-9_-]{5,19}$/
-        if (phoneRegex.test(value) || wechatRegex.test(value)) {
-          callback()
-        } else {
-          callback(new Error('请输入正确的手机号或微信号'))
-        }
-      },
-      trigger: 'blur'
-    }
-  ],
-  remarks: [
-    { max: 200, message: '备注信息最多200字', trigger: 'blur' }
-  ],
   questionnaire: {
     housing: [
       { required: true, message: '请选择居住环境', trigger: 'change' }

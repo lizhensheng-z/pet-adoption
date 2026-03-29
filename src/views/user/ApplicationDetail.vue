@@ -55,18 +55,6 @@
           <h3>申请信息</h3>
           <div class="info-grid">
             <div class="info-item">
-              <label>申请理由：</label>
-              <p>{{ application.reason || '暂无' }}</p>
-            </div>
-            <div class="info-item">
-              <label>联系方式：</label>
-              <p>{{ maskContactInfo(application.userPhone) }}</p>
-            </div>
-            <div class="info-item">
-              <label>备注信息：</label>
-              <p>{{ application.orgRemark || '无' }}</p>
-            </div>
-            <div class="info-item">
               <label>提交时间：</label>
               <p>{{ formatTime(application.submitTime) }}</p>
             </div>
