@@ -91,6 +91,8 @@ import { useAuthStore } from '@/stores/auth.js'
 import PageHeader from '@/components/common/PageHeader.vue'
 import PetCard from '@/components/common/PetCard.vue'
 import { Search, ArrowRight, MoreFilled, Folder, Star, Clock, Compass, OfficeBuilding, Setting } from '@element-plus/icons-vue'
+import { petAPI } from '@/api/modules/pet.js'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -163,48 +165,34 @@ const loadRecommendedPets = async (isLoadMore = false) => {
       loading.value = true
     }
 
-    // TODO: 调用API获取推荐宠物
-    // const params = {
-    //   page: page.value,
-    //   pageSize: 12,
-    //   lat: appStore.location.latitude,
-    //   lng: appStore.location.longitude
-    // }
-    // const { data } = await petAPI.getRecommendedPets(params)
-    
-    // 模拟数据
-    const mockData = {
-      list: Array.from({ length: 12 }, (_, index) => ({
-        id: isLoadMore ? (page.value - 1) * 12 + index + 1 : index + 1,
-        name: ['小橘', '咪咪', '旺财', '贝贝', '豆豆', '球球'][index % 6],
-        breed: ['橘猫', '英短', '哈士奇', '金毛', '柯基', '布偶猫'][index % 6],
-        age: Math.random() * 10,
-        gender: index % 2 === 0 ? 'male' : 'female',
-        status: 'available',
-        images: [`https://picsum.photos/seed/pet${index}/400/300.jpg`],
-        tags: ['粘人', '已绝育', '疫苗齐'].slice(0, Math.floor(Math.random() * 3) + 1),
-        distance: Math.random() * 10,
-        matchScore: Math.random() * 100,
-        organization: {
-          name: '爱心动物救助站'
-        },
-        createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
-      })),
-      totalPages: 5
+    // 获取用户位置
+    const location = appStore.location || {}
+
+    // 调用推荐API
+    const params = {
+      page: page.value,
+      pageSize: 12,
+      lng: location.longitude,
+      lat: location.latitude
     }
+
+    const { data } = await petAPI.getRecommendedPets(params)
 
     if (isLoadMore) {
-      recommendedPets.value.push(...mockData.list)
+      recommendedPets.value.push(...data.list)
     } else {
-      recommendedPets.value = mockData.list
+      recommendedPets.value = data.list
     }
 
-    hasMore.value = page.value < mockData.totalPages
+    // 计算总页数
+    const totalPages = Math.ceil(data.total / params.pageSize)
+    hasMore.value = page.value < totalPages
     if (hasMore.value) {
       page.value++
     }
   } catch (error) {
     console.error('加载推荐宠物失败:', error)
+    ElMessage.error('加载推荐宠物失败')
   } finally {
     loading.value = false
     loadingMore.value = false

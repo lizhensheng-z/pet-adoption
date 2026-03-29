@@ -14,6 +14,11 @@ export const petAPI = {
     return http.get(`/pets/${id}`)
   },
 
+  /** 获取推荐宠物列表 */
+  getRecommendedPets(params) {
+    return http.get('/pets/recommend', params)
+  },
+
   /** 获取机构自己的宠物列表 */
   getOrgPetList(params) {
     return http.get('/pets/org/my-pets', params)

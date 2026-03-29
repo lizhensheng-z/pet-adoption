@@ -3,7 +3,7 @@
     <!-- 宠物图片 -->
     <div class="pet-image">
       <el-image
-        :src="pet.images?.[0] || 'https://via.placeholder.com/400x300/e0e0e0/999999?text=No+Image'"
+        :src="pet.coverUrl || pet.images?.[0] || 'https://via.placeholder.com/400x300/e0e0e0/999999?text=No+Image'"
         :alt="pet.name"
         fit="cover"
         class="image"
@@ -41,9 +41,9 @@
         <div class="pet-meta">
           <span class="breed">{{ pet.breed }}</span>
           <span class="separator">·</span>
-          <span class="age">{{ formatAge(pet.age) }}</span>
+          <span class="age">{{ formatAge(pet.ageMonth) }}</span>
           <span class="separator">·</span>
-          <span class="gender">{{ pet.gender === 'male' ? '男孩' : '女孩' }}</span>
+          <span class="gender">{{ formatGender(pet.gender) }}</span>
         </div>
       </div>
 
@@ -69,9 +69,9 @@
       </div>
 
       <!-- 机构信息 -->
-      <div class="org-info" v-if="showOrg && pet.organization">
+      <div class="org-info" v-if="showOrg && pet.orgName">
         <el-icon size="12"><OfficeBuilding /></el-icon>
-        <span>{{ pet.organization.name }}</span>
+        <span>{{ pet.orgName }}</span>
       </div>
 
       <!-- 状态信息 -->
@@ -83,8 +83,8 @@
         >
           {{ getStatusText(pet.status) }}
         </el-tag>
-        <span class="publish-time" v-if="pet.createdAt">
-          {{ formatRelativeTime(pet.createdAt) }}
+        <span class="publish-time" v-if="pet.publishedTime">
+          {{ formatRelativeTime(pet.publishedTime) }}
         </span>
       </div>
     </div>
@@ -151,11 +151,26 @@ const toggleFavorite = async () => {
   }
 }
 
-const formatAge = (age) => {
-  if (age < 1) {
-    return `${Math.round(age * 12)}个月`
+const formatAge = (ageMonth) => {
+  if (!ageMonth) return '未知'
+  if (ageMonth < 12) {
+    return `${ageMonth}个月`
   }
-  return `${age}岁`
+  const years = Math.floor(ageMonth / 12)
+  const months = ageMonth % 12
+  if (months === 0) {
+    return `${years}岁`
+  }
+  return `${years}岁${months}个月`
+}
+
+const formatGender = (gender) => {
+  const genderMap = {
+    'MALE': '男孩',
+    'FEMALE': '女孩',
+    'UNKNOWN': '未知'
+  }
+  return genderMap[gender] || '未知'
 }
 
 const formatDistance = (distance) => {
@@ -164,20 +179,22 @@ const formatDistance = (distance) => {
 
 const getStatusType = (status) => {
   const statusMap = {
-    available: 'success',
-    pending: 'warning',
-    adopted: 'info',
-    unavailable: 'danger'
+    'PUBLISHED': 'success',
+    'APPLYING': 'warning',
+    'ADOPTED': 'info',
+    'DRAFT': 'info',
+    'PENDING_AUDIT': 'warning'
   }
   return statusMap[status] || 'info'
 }
 
 const getStatusText = (status) => {
   const statusMap = {
-    available: '可领养',
-    pending: '申请中',
-    adopted: '已领养',
-    unavailable: '不可领养'
+    'PUBLISHED': '可领养',
+    'APPLYING': '申请中',
+    'ADOPTED': '已领养',
+    'DRAFT': '草稿',
+    'PENDING_AUDIT': '审核中'
   }
   return statusMap[status] || '未知'
 }
