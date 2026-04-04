@@ -236,7 +236,7 @@ const handleRemoveFavorite = async (id, name) => {
 }
 
 const getStatusText = (s) => {
-  const map = { 'PUBLISHED': '可领养', 'ADOPTED': '已结缘', 'PENDING': '审核中' }
+  const map = { 'PUBLISHED': '可领养', 'ADOPTED': '已结缘' }
   return map[s] || '未知'
 }
 

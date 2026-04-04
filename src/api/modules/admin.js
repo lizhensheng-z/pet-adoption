@@ -107,21 +107,6 @@ export const petApi = {
     http.patch(`/admin/pets/${id}/status`, { status })
 }
 
-// 宠物审核相关API
-export const petAuditApi = {
-  // 获取待审核宠物列表
-  getPendingPets: (params) => http.get('/admin/pets/pending', params),
-
-  // 获取待审核宠物详情
-  getPetAuditDetail: (petId) => http.get(`/admin/pets/pending/${petId}`),
-
-  // 审核宠物
-  auditPet: (data) => http.post('/admin/pets/audit', data),
-
-  // 获取待审核宠物数量
-  countPendingPets: () => http.get('/admin/pets/pending/count')
-}
-
 // 机构管理相关API
 export const orgApi = {
   // 获取机构列表

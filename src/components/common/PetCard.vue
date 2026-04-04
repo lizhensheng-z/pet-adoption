@@ -205,10 +205,7 @@ const formatDistance = (distance) => {
 const getStatusType = (status) => {
   const statusMap = {
     'PUBLISHED': 'success',
-    'APPLYING': 'warning',
-    'ADOPTED': 'info',
-    'DRAFT': 'info',
-    'PENDING_AUDIT': 'warning'
+    'ADOPTED': 'info'
   }
   return statusMap[status] || 'info'
 }
@@ -216,10 +213,7 @@ const getStatusType = (status) => {
 const getStatusText = (status) => {
   const statusMap = {
     'PUBLISHED': '可领养',
-    'APPLYING': '申请中',
-    'ADOPTED': '已领养',
-    'DRAFT': '草稿',
-    'PENDING_AUDIT': '审核中'
+    'ADOPTED': '已领养'
   }
   return statusMap[status] || '未知'
 }

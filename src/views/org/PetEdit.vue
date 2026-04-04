@@ -220,27 +220,7 @@
           </el-row>
         </el-card>
 
-        <!-- 状态设置 -->
-        <el-card class="form-section">
-          <template #header>
-            <div class="card-header">
-              <span>状态设置</span>
-            </div>
-          </template>
-          
-          <el-row :gutter="20">
-            <el-col :span="12">
-              <el-form-item label="发布状态" prop="status">
-                <el-select v-model="petForm.status" placeholder="请选择状态" style="width: 100%">
-                  <el-option label="草稿" value="DRAFT" />
-                  <el-option label="已发布" value="PUBLISHED" />
-                  <el-option label="已下架" value="OFFLINE" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </el-card>
-      </el-form>
+              </el-form>
     </div>
 
 </template>
@@ -282,8 +262,7 @@ const petForm = reactive({
   personalityDesc: '',
   adoptRequirements: '',
   lng: undefined,
-  lat: undefined,
-  status: 'DRAFT'
+  lat: undefined
 })
 
 // 表单验证规则
@@ -313,10 +292,18 @@ const formRules = {
 // 获取宠物详情
 const getPetDetail = async () => {
   if (!isEdit.value) return
-  
+
   loading.value = true
   try {
     const { data } = await petAPI.getPetDetail(Number(route.params.id))
+
+    // 检查宠物状态，已领养的宠物禁止编辑
+    if (data.status === 'ADOPTED') {
+      ElMessage.warning('已领养的宠物不能修改')
+      router.push('/org/pets')
+      return
+    }
+
     Object.assign(petForm, data)
   } catch (error) {
     ElMessage.error('获取宠物详情失败')

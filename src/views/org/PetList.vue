@@ -33,20 +33,7 @@
               style="width: 120px"
             >
               <el-option label="已发布" value="PUBLISHED" />
-              <el-option label="草稿" value="DRAFT" />
-              <el-option label="已下架" value="OFFLINE" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="审核状态">
-            <el-select
-              v-model="searchForm.auditStatus"
-              placeholder="全部状态"
-              clearable
-              style="width: 120px"
-            >
-              <el-option label="待审核" value="PENDING" />
-              <el-option label="已通过" value="APPROVED" />
-              <el-option label="已拒绝" value="REJECTED" />
+              <el-option label="已领养" value="ADOPTED" />
             </el-select>
           </el-form-item>
           <el-form-item>
@@ -99,13 +86,6 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="auditStatus" label="审核状态" width="100">
-            <template #default="{ row }">
-              <el-tag :type="getAuditType(row.auditStatus)">
-                {{ getAuditText(row.auditStatus) }}
-              </el-tag>
-            </template>
-          </el-table-column>
           <el-table-column prop="applicationCount" label="申请数" width="80" align="center" />
           <el-table-column prop="favoriteCount" label="收藏数" width="80" align="center" />
           <el-table-column prop="publishedTime" label="发布时间" width="160">
@@ -121,11 +101,11 @@
               <el-button type="success" link @click="handleView(row)">
                 查看
               </el-button>
-              <el-button 
-                type="danger" 
-                link 
+              <el-button
+                type="danger"
+                link
                 @click="handleDelete(row)"
-                :disabled="row.status === 'PUBLISHED'"
+                :disabled="row.status === 'ADOPTED'"
               >
                 删除
               </el-button>
@@ -163,8 +143,7 @@ const router = useRouter()
 // 搜索表单
 const searchForm = reactive({
   keyword: '',
-  status: '',
-  auditStatus: ''
+  status: ''
 })
 
 // 分页数据
@@ -208,7 +187,6 @@ const handleSearch = () => {
 const handleReset = () => {
   searchForm.keyword = ''
   searchForm.status = ''
-  searchForm.auditStatus = ''
   handleSearch()
 }
 
@@ -267,9 +245,7 @@ const handleDelete = async (row) => {
 const getStatusType = (status) => {
   const map = {
     'PUBLISHED': 'success',
-    'DRAFT': 'info',
-    'OFFLINE': 'danger',
-    'PENDING_AUDIT': 'warning'
+    'ADOPTED': 'info'
   }
   return map[status] || 'info'
 }
@@ -278,33 +254,9 @@ const getStatusType = (status) => {
 const getStatusText = (status) => {
   const map = {
     'PUBLISHED': '已发布',
-    'DRAFT': '草稿',
-    'OFFLINE': '已下架',
-    'PENDING_AUDIT': '待审核'
+    'ADOPTED': '已领养'
   }
   return map[status] || status
-}
-
-// 审核状态类型映射
-const getAuditType = (auditStatus) => {
-  const map = {
-    'APPROVED': 'success',
-    'PENDING': 'warning',
-    'REJECTED': 'danger',
-    'NONE': 'info'
-  }
-  return map[auditStatus] || 'info'
-}
-
-// 审核状态文本映射
-const getAuditText = (auditStatus) => {
-  const map = {
-    'APPROVED': '已通过',
-    'PENDING': '待审核',
-    'REJECTED': '已拒绝',
-    'NONE': '未提交'
-  }
-  return map[auditStatus] || auditStatus
 }
 
 // 日期格式化

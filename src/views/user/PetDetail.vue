@@ -192,6 +192,7 @@ const error = ref(null)
 const isFavorited = ref(false)
 const favoriteLoading = ref(false)
 const applying = ref(false)
+const hasApplied = ref(false) // 当前用户是否已申请
 
 // 相似推荐
 const similarPets = ref([])
@@ -240,14 +241,14 @@ const sizeText = computed(() => {
 
 // 计算属性：是否可申请
 const canApply = computed(() => {
-  return petDetail.value.status === 'PUBLISHED' && !applying.value
+  return petDetail.value.status === 'PUBLISHED' && !applying.value && !hasApplied.value
 })
 
 // 计算属性：申请按钮文本
 const applyButtonText = computed(() => {
   const status = petDetail.value.status
-  if (status === 'APPLYING') return '申请中'
   if (status === 'ADOPTED') return '已领养'
+  if (hasApplied.value) return '已申请'
   return '申请领养'
 })
 
@@ -256,7 +257,6 @@ const statusTag = computed(() => {
   const status = petDetail.value.status
   const statusMap = {
     'PUBLISHED': { text: '可领养', type: 'success' },
-    'APPLYING': { text: '申请中', type: 'warning' },
     'ADOPTED': { text: '已领养', type: 'info' }
   }
   return statusMap[status] || { text: '未知', type: 'default' }
@@ -322,6 +322,8 @@ const loadPetDetail = async () => {
     // 检查收藏状态（如果已登录）
     if (authStore.isLoggedIn) {
       checkFavoriteStatus()
+      // 检查当前用户是否已申请该宠物
+      checkApplicationStatus()
     }
   } catch (err) {
     console.error('加载宠物详情失败:', err)
@@ -385,6 +387,21 @@ const checkFavoriteStatus = async () => {
     isFavorited.value = response.data.favorited
   } catch (err) {
     console.error('检查收藏状态失败:', err)
+  }
+}
+
+// 检查当前用户是否已申请该宠物
+const checkApplicationStatus = async () => {
+  try {
+    // 查询当前用户的所有申请，筛选出该宠物的申请
+    const response = await applicationAPI.getMyApplications({ pageNo: 1, pageSize: 100 })
+    // 检查是否有该宠物的申请记录且状态不是已取消
+    const applications = response.data?.list || []
+    hasApplied.value = applications.some(app =>
+      app.petId === petDetail.value.id && app.status !== 'CANCELLED'
+    )
+  } catch (err) {
+    console.error('检查申请状态失败:', err)
   }
 }
 

@@ -155,10 +155,7 @@ const router = useRouter()
 const getStatusType = (status) => {
   const typeMap = {
     PUBLISHED: 'success',
-    APPLYING: 'warning',
-    ADOPTED: 'info',
-    DRAFT: 'info',
-    PENDING_AUDIT: 'warning'
+    ADOPTED: 'info'
   }
   return typeMap[status] || 'info'
 }
@@ -167,10 +164,7 @@ const getStatusType = (status) => {
 const getStatusText = (status) => {
   const textMap = {
     PUBLISHED: '已发布',
-    APPLYING: '申请中',
-    ADOPTED: '已领养',
-    DRAFT: '草稿',
-    PENDING_AUDIT: '审核中'
+    ADOPTED: '已领养'
   }
   return textMap[status] || status
 }

@@ -42,9 +42,9 @@ export const orgAPI = {
     return http.delete(`/org/pets/${petId}/media/${mediaId}`)
   },
 
-  // 提交审核
-  submitPetAudit(id) {
-    return http.post(`/pets/org/pets/${id}/submit-audit`)
+  // 发布宠物
+  publishPet(id) {
+    return http.post(`/pets/org/pets/${id}/publish`)
   },
 
   // 获取标签列表

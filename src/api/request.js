@@ -75,8 +75,8 @@ request.interceptors.response.use(
 
     const { data } = response
 
-    // 统一处理业务状态码
-    if (data.code === RESPONSE_CODES.SUCCESS) {
+    // 统一处理业务状态码（使用 == 宽松比较，兼容字符串和数字类型）
+    if (data.code == RESPONSE_CODES.SUCCESS) {
       return data
     } else {
       const errMsg = data.message || ERROR_MESSAGES[data.code] || '系统错误'

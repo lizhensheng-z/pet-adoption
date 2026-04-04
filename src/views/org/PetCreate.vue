@@ -12,15 +12,8 @@
     ]">
       <template #actions>
         <div class="header-action-group">
-          <!-- 始终可以点击，点击后校验 -->
-          <el-button class="glass-btn" @click="handleSaveDraft" :loading="submitting">
-            保存草稿
-          </el-button>
-          <el-button class="glass-btn" @click="handlePreview">
-            预览
-          </el-button>
-          <el-button type="primary" class="gradient-btn" @click="handleSubmit" :loading="submitting">
-            提交审核
+          <el-button type="primary" class="gradient-btn" @click="handlePublish" :loading="submitting">
+            立即发布
           </el-button>
         </div>
       </template>
@@ -230,50 +223,9 @@ const healthStatusList = computed({
 
 const ageMonth = computed(() => formData.value.ageYears * 12 + formData.value.ageMonths)
 
-// --- 核心方法：保存草稿 ---
-const handleSaveDraft = async () => {
-  console.log('点击保存草稿');
-  // 基础校验
-  if (!formData.value.name) return ElMessage.warning('请至少填写宠物名称');
-  
-  try {
-    submitting.value = true;
-    const postData = {
-      ...formData.value,
-      ageMonth: ageMonth.value,
-      sterilized: formData.value.health.sterilized ? 1 : 0,
-      vaccinated: formData.value.health.vaccinated ? 1 : 0,
-      dewormed: formData.value.health.dewormed ? 1 : 0,
-      healthDesc: formData.value.health.healthDesc,
-      personalityDesc: formData.value.personality.desc,
-      lng: formData.value.location.lng,
-      lat: formData.value.location.lat,
-      coverUrl: mediaList.value.find(m => m.isCover)?.url || mediaList.value[0]?.url || '',
-      status: 'DRAFT'
-    };
-
-    let res;
-    if (petId.value) {
-      res = await orgAPI.updatePet(petId.value, postData);
-    } else {
-      res = await orgAPI.createPet(postData);
-      petId.value = res.data?.id || res.id;
-    }
-
-    // 处理图片关联
-    await uploadPendingMedia();
-    ElMessage.success('草稿已保存');
-  } catch (e) {
-    console.error(e);
-    ElMessage.error('保存失败：' + (e.message || '网络异常'));
-  } finally {
-    submitting.value = false;
-  }
-}
-
-// --- 核心方法：提交审核 ---
-const handleSubmit = async () => {
-  console.log('点击提交审核');
+// --- 核心方法：直接发布 ---
+const handlePublish = async () => {
+  console.log('点击发布');
   try {
     // 1. 验证表单规则
     await formRef.value.validate();
@@ -285,23 +237,57 @@ const handleSubmit = async () => {
     }
 
     // 3. 二次确认
-    await ElMessageBox.confirm('确认信息准确并提交审核吗？提交后将不可修改。', '提示', {
-      confirmButtonText: '确定提交',
+    await ElMessageBox.confirm('确认信息准确并发布吗？发布后即可被用户看到。', '提示', {
+      confirmButtonText: '确定发布',
       cancelButtonText: '取消',
       type: 'info'
     });
 
-    // 4. 先保存，再提交
-    await handleSaveDraft();
-    
     submitting.value = true;
-    await orgAPI.submitPetAudit(petId.value);
-    
-    ElMessage.success('发布成功，请耐心等待审核');
+
+    // 4. 构建发布数据（使用后端期望的嵌套结构）
+    const postData = {
+      name: formData.value.name,
+      species: formData.value.species,
+      breed: formData.value.breed,
+      gender: formData.value.gender,
+      size: formData.value.size,
+      color: formData.value.color,
+      ageMonth: ageMonth.value,
+      adoptRequirements: formData.value.adoptRequirements,
+      coverUrl: mediaList.value.find(m => m.isCover)?.url || mediaList.value[0]?.url || '',
+      // 嵌套结构 - 健康信息
+      health: {
+        sterilized: formData.value.health.sterilized,
+        vaccinated: formData.value.health.vaccinated,
+        dewormed: formData.value.health.dewormed,
+        healthDesc: formData.value.health.healthDesc
+      },
+      // 嵌套结构 - 位置信息
+      location: {
+        lng: formData.value.location.lng,
+        lat: formData.value.location.lat
+      },
+      // 嵌套结构 - 性格信息
+      personality: {
+        desc: formData.value.personality.desc,
+        tags: formData.value.personality.tags
+      }
+    };
+
+    // 5. 创建宠物（后端会自动设置为 PUBLISHED 状态）
+    const res = await orgAPI.createPet(postData);
+    petId.value = res.data?.id || res.id;
+
+    // 6. 处理图片关联
+    await uploadPendingMedia();
+
+    ElMessage.success('发布成功！');
     router.push('/org/pet');
   } catch (e) {
     if (e === 'cancel') return;
-    ElMessage.error('提交失败，请检查必填项');
+    console.error(e);
+    ElMessage.error('发布失败，请检查必填项');
   } finally {
     submitting.value = false;
   }
@@ -381,7 +367,6 @@ const handleToggleTag = (tag) => {
   const idx = formData.value.personality.tags.indexOf(tag.id);
   idx > -1 ? formData.value.personality.tags.splice(idx, 1) : formData.value.personality.tags.push(tag.id);
 }
-const handlePreview = () => petId.value ? ElMessage.info('预览功能开发中') : ElMessage.warning('请先保存草稿');
 
 onMounted(async () => {
   const res = await orgAPI.getTagList({ enabled: 1 });
