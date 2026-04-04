@@ -293,16 +293,26 @@ const loadPreference = async () => {
 const loadTags = async () => {
   try {
     const { data } = await tagApi.getTagList({ pageSize: 50 })
+    console.log('标签接口返回数据:', data)
+    let tagList = []
     if (data?.records) {
-      availableTags.value = data.records
-        .filter(tag => tag.status === 'ENABLED' || tag.status === 1)
-        .map(tag => tag.name || tag.tagName)
+      tagList = data.records
     } else if (Array.isArray(data)) {
-      availableTags.value = data
-        .filter(tag => tag.status === 'ENABLED' || tag.status === 1)
-        .map(tag => tag.name || tag.tagName)
+      tagList = data
+    } else if (data?.list) {
+      tagList = data.list
     }
+    // 过滤启用的标签，获取标签名称
+    availableTags.value = tagList
+      .filter(tag => {
+        const isEnabled = tag.status === 'ENABLED' || tag.status === 1 || tag.enabled === true || tag.enabled === 1
+        console.log('标签:', tag.name || tag.tagName, '状态:', tag.status, tag.enabled, '是否启用:', isEnabled)
+        return isEnabled
+      })
+      .map(tag => tag.name || tag.tagName)
+    console.log('可用标签列表:', availableTags.value)
   } catch (error) {
+    console.error('加载标签失败:', error)
     // 使用默认标签
     availableTags.value = ['温顺', '活泼', '亲人', '独立', '安静', '爱叫', '粘人', '高冷', '聪明', '乖巧']
   }
@@ -342,9 +352,11 @@ const resetForm = () => {
   ElMessage.info('已重置为默认设置')
 }
 
-onMounted(() => {
-  loadPreference()
-  loadTags()
+onMounted(async () => {
+  // 先加载标签列表，再加载偏好设置，确保标签选项已准备好
+  await loadTags()
+  await loadPreference()
+  console.log('偏好数据加载完成, form.tags:', form.tags)
 })
 </script>
 
