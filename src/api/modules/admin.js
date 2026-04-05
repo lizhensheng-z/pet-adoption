@@ -75,7 +75,7 @@ export const userApi = {
   
   // 批量删除用户
   batchDeleteUsers: (ids) => 
-    http.delete('/admin/users/batch', { ids }),
+    http.delete('/admin/users/batch', { data: { ids } }),
   
   // 导出用户
   exportUsers: (params) => http.get('/admin/users/export', params),

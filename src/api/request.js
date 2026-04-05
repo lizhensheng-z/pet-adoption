@@ -243,6 +243,11 @@ const http = {
   },
 
   delete(url, params = {}, config = {}) {
+    // 如果 params 包含 data 属性，则使用请求体发送
+    if (params && typeof params === 'object' && params.data) {
+      const { data, ...restParams } = params
+      return request({ method: 'DELETE', url, data, ...restParams, ...config })
+    }
     return request({ method: 'DELETE', url, params, ...config })
   },
 

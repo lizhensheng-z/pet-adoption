@@ -1,5 +1,5 @@
 <template>
-  <AppLayout>
+
     <PageHeader :title="notice?.title || '公告详情'" show-back />
     
     <div class="page-container">
@@ -50,7 +50,7 @@
         </div>
       </el-card>
     </div>
-  </AppLayout>
+
 </template>
 
 <script setup>

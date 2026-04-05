@@ -1,5 +1,5 @@
 <template>
-  <AppLayout>
+
     <PageHeader title="系统公告" />
     
     <div class="page-container">
@@ -49,7 +49,7 @@
         </div>
       </el-card>
     </div>
-  </AppLayout>
+
 </template>
 
 <script setup>

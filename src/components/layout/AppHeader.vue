@@ -155,7 +155,7 @@ const isAdminUser = computed(() => {
 
 // 事件处理
 const showNotifications = () => {
-  // TODO: 显示通知面板
+  router.push('/notices')
 }
 
 const handleLocationCommand = (command) => {
