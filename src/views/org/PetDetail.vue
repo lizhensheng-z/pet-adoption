@@ -89,6 +89,20 @@
             </div>
           </el-col>
         </el-row>
+
+        <!-- 位置信息 -->
+        <div class="location-section" v-if="petDetail.lng && petDetail.lat">
+          <h4>所在位置</h4>
+          <div class="location-info">
+            <div class="address-text">
+              <el-icon><Location /></el-icon>
+              <span>{{ locationAddress || '正在解析地址...' }}</span>
+            </div>
+            <div class="coords-text">
+              经度: {{ petDetail.lng?.toFixed(6) }} | 纬度: {{ petDetail.lat?.toFixed(6) }}
+            </div>
+          </div>
+        </div>
       </el-card>
     </div>
 
@@ -98,27 +112,51 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Back, Edit, Picture } from '@element-plus/icons-vue'
+import { Back, Edit, Picture, Location } from '@element-plus/icons-vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import {petAPI} from '@/api/modules/pet.js'
+import {orgAPI} from '@/api/modules/org.js'
+import { MapUtils } from '@/utils/map.js'
 
 const route = useRoute()
 const router = useRouter()
 
 const petDetail = ref({})
 const loading = ref(false)
+const locationAddress = ref('')
 
 // 获取宠物详情
 const getPetDetail = async () => {
   loading.value = true
   try {
-    const { data } = await petAPI.getPetDetail(Number(route.params.id))
+    // 使用机构端接口获取完整信息（包括经纬度）
+    const { data } = await orgAPI.getOrgPetDetail(Number(route.params.id))
     petDetail.value = data
+    
+    // 如果有经纬度，解析地址
+    if (data.lng && data.lat) {
+      reverseGeocode(data.lat, data.lng)
+    }
   } catch (error) {
     ElMessage.error('获取宠物详情失败')
     console.error('获取宠物详情失败:', error)
   } finally {
     loading.value = false
+  }
+}
+
+// 逆地理编码获取地址
+const reverseGeocode = async (lat, lng) => {
+  try {
+    const result = await MapUtils.amap.reverseGeocode(lat, lng)
+    if (result && result.formattedAddress) {
+      locationAddress.value = result.formattedAddress
+    } else {
+      locationAddress.value = '未知位置'
+    }
+  } catch (error) {
+    console.error('解析地址失败:', error)
+    locationAddress.value = '地址解析失败'
   }
 }
 
@@ -136,8 +174,7 @@ const handleEdit = () => {
 const getStatusType = (status) => {
   const map = {
     'PUBLISHED': 'success',
-    'DRAFT': 'info',
-    'OFFLINE': 'danger'
+    'ADOPTED': 'info'
   }
   return map[status] || 'info'
 }
@@ -146,8 +183,7 @@ const getStatusType = (status) => {
 const getStatusText = (status) => {
   const map = {
     'PUBLISHED': '已发布',
-    'DRAFT': '草稿',
-    'OFFLINE': '已下架'
+    'ADOPTED': '已领养'
   }
   return map[status] || status
 }
@@ -218,5 +254,41 @@ onMounted(() => {
   margin: 0;
   color: var(--el-text-color-regular);
   line-height: 1.6;
+}
+
+/* 位置信息样式 */
+.location-section {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--el-border-color-lighter);
+}
+
+.location-section h4 {
+  margin-bottom: var(--spacing-sm);
+  color: var(--el-text-color-primary);
+}
+
+.location-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.address-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--el-text-color-primary);
+}
+
+.address-text .el-icon {
+  color: #FF8C42;
+  font-size: 16px;
+}
+
+.coords-text {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
 }
 </style>
