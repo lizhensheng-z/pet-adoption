@@ -498,7 +498,7 @@ const sharePet = async () => {
     "lng": 116.404,
     "lat": 39.915,
     "coverUrl": "https://example.com/pet1-cover.jpg",
-    "publishedTime": "2024-01-15T10:00:00",
+    "publishedTime": "2026-01-15T10:00:00",
     "distance": 5.2,
     "images": [
       {

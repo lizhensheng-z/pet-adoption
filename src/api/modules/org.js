@@ -17,6 +17,11 @@ export const orgAPI = {
     return http.get('/org/pets', params)
   },
 
+  // 获取机构宠物详情
+  getOrgPetDetail(id) {
+    return http.get(`/pets/org/detail/${id}`)
+  },
+
   // 创建宠物档案
   createPet(data) {
     return http.post('/pets/org/createPet', data)
