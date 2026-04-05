@@ -176,7 +176,17 @@ const getReasonText = (reason) => {
   const reasonMap = {
     'CHECKIN': '完成打卡',
     'APPROVED': '申请通过',
-    'VIOLATION': '违规扣分'
+    'VIOLATION': '违规扣分',
+    'CANCEL_APPLY': '取消申请',
+    'APPLY_PET': '提交申请',
+    'REJECTED': '申请被拒绝',
+    'ADOPT_SUCCESS': '领养成功',
+    'BADGE_EARNED': '获得徽章',
+    'PROFILE_COMPLETE': '完善资料',
+    'FIRST_LOGIN': '首次登录',
+    'DAILY_LOGIN': '每日登录',
+    'SHARE_POST': '分享动态',
+    'INVITE_FRIEND': '邀请好友'
   }
   return reasonMap[reason] || reason
 }

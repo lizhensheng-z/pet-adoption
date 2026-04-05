@@ -78,7 +78,7 @@
             </el-radio-group>
           </el-form-item>
 
-          <el-form-item label="陪伴时间" prop="questionnaire.dailyTime">
+          <el-form-item label="日陪伴时间" prop="questionnaire.dailyTime">
             <el-radio-group v-model="form.questionnaire.dailyTime">
               <el-radio value="1-2小时">1-2小时</el-radio>
               <el-radio value="3-4小时">3-4小时</el-radio>

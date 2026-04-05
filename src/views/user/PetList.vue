@@ -110,7 +110,7 @@
               />
               <div class="pet-info">
                 <h3>{{ pet.name }}</h3>
-                <p>{{ pet.breed }} · {{ formatAge(pet.age) }} · {{ pet.gender === 'male' ? '男孩' : '女孩' }}</p>
+                <p>{{ pet.breed }} · {{ formatAge(pet.ageMonth) }} · {{ formatGender(pet.gender) }}</p>
                 <div class="pet-tags">
                   <el-tag
                     v-for="tag in pet.tags?.slice(0, 3)"
@@ -181,11 +181,18 @@ const pagination = reactive({
 })
 
 // 方法
-const formatAge = (age) => {
-  if (age < 1) {
-    return `${Math.round(age * 12)}个月`
+const formatAge = (ageMonth) => {
+  if (!ageMonth && ageMonth !== 0) return '未知'
+  return `${ageMonth}个月`
+}
+
+const formatGender = (gender) => {
+  const genderMap = {
+    'MALE': '男孩',
+    'FEMALE': '女孩',
+    'UNKNOWN': '未知'
   }
-  return `${age}岁`
+  return genderMap[gender] || '未知'
 }
 
 const handleSearch = () => {
@@ -327,27 +334,27 @@ const loadPetList = async () => {
       // 1. 重命名解构出来的变量为 resList 和 resTotal
       const { list: resList, total: resTotal } = response.data
 
-      // 2. 转换数据格式
+      // 2. 转换数据格式 - 保持与后端返回格式一致，PetCard组件会处理
       petList.value = Array.isArray(resList) ? resList.map(pet => ({
         id: pet.id,
         name: pet.name || '未命名',
         breed: pet.breed || '未知品种',
-        age: pet.ageMonth ? pet.ageMonth / 12 : 0,
-        gender: pet.gender === 'MALE' ? 'male' : pet.gender === 'FEMALE' ? 'female' : 'unknown',
-        status: pet.status === 'PUBLISHED' ? 'available' : 'unavailable',
-        // 优先使用 images 数组，如果没有则用 coverUrl 包装成数组
-        images: (Array.isArray(pet.images) && pet.images.length > 0) 
-                ? pet.images 
-                : (pet.coverUrl ? [pet.coverUrl] : []),
-        tags: pet.tags || [],
-        distance: pet.distance || 0,
-        matchScore: pet.matchScore || 0,
-        species: pet.species,
+        ageMonth: pet.ageMonth,  // 保持原始月龄
+        gender: pet.gender,  // 保持原始格式 MALE/FEMALE/UNKNOWN
         size: pet.size,
+        color: pet.color,
         sterilized: pet.sterilized,
         vaccinated: pet.vaccinated,
         dewormed: pet.dewormed,
-        createdAt: pet.publishedTime
+        status: pet.status,
+        coverUrl: pet.coverUrl,  // 保留封面图
+        images: pet.images || [],
+        tags: pet.tags || [],
+        orgUserId: pet.orgUserId,
+        orgName: pet.orgName,
+        publishedTime: pet.publishedTime,
+        distance: pet.distance,
+        matchScore: pet.matchScore
       })) : []
 
       // 3. 正确为顶层的 total ref 赋值

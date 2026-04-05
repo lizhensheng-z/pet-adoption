@@ -15,8 +15,8 @@
           <h3>宠物信息</h3>
           <div class="pet-info">
             <el-image
-              :src="application.pet?.images?.[0] || '/default-pet.jpg'"
-              :alt="application.pet?.name"
+              :src="application.petCoverUrl || '/default-pet.jpg'"
+              :alt="application.petName"
               class="pet-image"
               fit="cover"
             >

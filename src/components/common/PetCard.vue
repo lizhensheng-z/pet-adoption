@@ -177,16 +177,8 @@ const toggleFavorite = async () => {
 }
 
 const formatAge = (ageMonth) => {
-  if (!ageMonth) return '未知'
-  if (ageMonth < 12) {
-    return `${ageMonth}个月`
-  }
-  const years = Math.floor(ageMonth / 12)
-  const months = ageMonth % 12
-  if (months === 0) {
-    return `${years}岁`
-  }
-  return `${years}岁${months}个月`
+  if (!ageMonth && ageMonth !== 0) return '未知'
+  return `${ageMonth}个月`
 }
 
 const formatGender = (gender) => {
