@@ -11,27 +11,14 @@
             class="todo-list-card__badge"
           />
         </div>
-        <div class="todo-list-card__actions">
-          <el-button-group>
-            <el-button
-              v-for="filter in todoFilters"
-              :key="filter.value"
-              :type="activeFilter === filter.value ? 'primary' : 'default'"
-              size="small"
-              @click="handleFilterChange(filter.value)"
-            >
-              {{ filter.label }}
-            </el-button>
-          </el-button-group>
-          <el-button
-            text
-            type="primary"
-            size="small"
-            @click="handleViewAll"
-          >
-            查看全部
-          </el-button>
-        </div>
+        <el-button
+          text
+          type="primary"
+          size="small"
+          @click="handleViewAll"
+        >
+          查看全部
+        </el-button>
       </div>
     </template>
 
@@ -111,14 +98,6 @@ const props = defineProps({
 const emit = defineEmits(['refresh'])
 
 const router = useRouter()
-
-// 待办过滤器
-const todoFilters = [
-  { label: '全部', value: 'all' },
-  { label: '申请', value: 'application' },
-  { label: '回访', value: 'followup' },
-  { label: '审核', value: 'audit' }
-]
 
 // 当前过滤器
 const activeFilter = ref('all')
@@ -218,12 +197,6 @@ watch(() => props.totalCount, (newCount) => {
   }
 }
 
-.todo-list-card__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-}
-
 .todo-list-card__loading {
   padding: var(--spacing-lg) 0;
 }
@@ -250,15 +223,6 @@ watch(() => props.totalCount, (newCount) => {
   .todo-list-card__header {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .todo-list-card__actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .todo-list-card__actions .el-button-group {
-    flex: 1;
   }
 }
 </style>

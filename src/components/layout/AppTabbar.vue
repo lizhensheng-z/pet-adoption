@@ -51,7 +51,14 @@ const tabItems = computed(() => {
   ]
 
   if (authStore.isLoggedIn) {
-    return [...baseItems, ...userItems]
+    const role = authStore.userRole
+    // 只有普通用户(USER)才显示收藏和申请入口
+    // 管理员(ADMIN)和机构用户(ORG)隐藏这些领养相关页面
+    if (role === 'USER' || role === 'ROLE_USER') {
+      return [...baseItems, ...userItems]
+    }
+    // 管理员和机构用户只显示基础导航 + 我的
+    return [...baseItems, { path: '/profile', name: '我的', icon: User }]
   } else {
     return [
       ...baseItems,
