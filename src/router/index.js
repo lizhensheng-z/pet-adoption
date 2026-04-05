@@ -135,6 +135,24 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
+  // 5.5 限制管理员和机构用户访问普通用户的领养相关页面
+  // 收藏、申请页面只对普通用户开放
+  const userOnlyPaths = ['/favorites', '/applications', '/apply', '/checkins']
+  const isUserOnlyPath = userOnlyPaths.some(p => to.path.startsWith(p))
+  
+  if (token && !tokenExpired && isUserOnlyPath) {
+    const authStore = useAuthStore()
+    const userRole = authStore.userRole
+    
+    // 管理员和机构用户禁止访问这些页面
+    if (userRole === 'ADMIN' || userRole === 'ROLE_ADMIN' || 
+        userRole === 'ORG' || userRole === 'ROLE_ORG') {
+      console.log('管理员/机构用户禁止访问普通用户领养页面:', to.path)
+      next('/home')
+      return
+    }
+  }
+
   // 6. 权限检查
   if (to.meta.permission && token && !tokenExpired) {
     const userRole = getUserRoleFromToken()
